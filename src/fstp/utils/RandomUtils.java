@@ -1,4 +1,4 @@
-package utils;
+package fstp.utils;
 
 import java.util.Random;
 import java.util.UUID;

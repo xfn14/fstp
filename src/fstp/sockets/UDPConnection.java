@@ -1,4 +1,4 @@
-package sockets;
+package fstp.sockets;
 
 public class UDPConnection {
     

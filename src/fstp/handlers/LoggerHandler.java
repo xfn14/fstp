@@ -1,4 +1,4 @@
-package handlers;
+package fstp.handlers;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 public class LoggerHandler {
-    public static void loadLoggerSettings(Logger logger){
+    public static void loadLoggerSettings(Logger logger, boolean file){
         try {
             SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
             SimpleFormatter formatter = new SimpleFormatter(){
@@ -26,12 +26,16 @@ public class LoggerHandler {
                     return sb.toString();
                 }
             };
-            SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy-HH-mm-ss");
-            FileHandler fileHandler = new FileHandler(dateFormatter.format(new Date()) + ".log");
-            fileHandler.setFormatter(formatter);
+            
+            if (file) {
+                SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy-HH-mm-ss");
+                FileHandler fileHandler = new FileHandler(dateFormatter.format(new Date()) + ".log");
+                fileHandler.setFormatter(formatter);
+                logger.addHandler(fileHandler);
+            }
+
             ConsoleHandler consoleHandler = new ConsoleHandler();
             consoleHandler.setFormatter(formatter);
-            logger.addHandler(fileHandler);
             logger.addHandler(consoleHandler);
             logger.setUseParentHandlers(false);
         } catch (IOException e) {

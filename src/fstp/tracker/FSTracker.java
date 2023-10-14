@@ -1,19 +1,20 @@
-package tracker;
+package fstp.tracker;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.logging.Logger;
 
-import handlers.LoggerHandler;
-import sockets.TCPConnection;
+import fstp.Constants;
+import fstp.handlers.LoggerHandler;
+import fstp.sockets.TCPConnection;
 
 public class FSTracker {
     public static Logger logger = Logger.getLogger("FS-Tracker");
-    public static final int DEFAULT_PORT = 9090;
     private boolean running = true;
 
     public static void main(String[] args) {
-        LoggerHandler.loadLoggerSettings(logger);
+        LoggerHandler.loadLoggerSettings(logger, false);
 
         FSTracker fsTracker = new FSTracker();
         try {
@@ -25,8 +26,8 @@ public class FSTracker {
     }
 
     public void init() throws IOException {
-        ServerSocket serverSocket = new ServerSocket(DEFAULT_PORT);
-        logger.info("Listening on port " + DEFAULT_PORT);
+        ServerSocket serverSocket = new ServerSocket(Constants.DEFAULT_PORT);
+        logger.info("Listening on port " + Constants.DEFAULT_PORT);
 
         Skeleton sk = new Skeleton();
 
@@ -34,7 +35,17 @@ public class FSTracker {
             TCPConnection connection = new TCPConnection(serverSocket.accept());
             logger.info("New connection from " + connection.getInetAddress().getHostAddress());
 
-            sk.handle(connection);
+            Runnable r = () -> {
+                try (connection) {
+                    for (; ; ) sk.handle(connection);
+                } catch (EOFException ignored){
+                } catch (Exception e){
+                    logger.warning("Error handling connection. " + e.getMessage());
+                    e.printStackTrace();
+                }
+            };
+            
+            new Thread(r).start();
         }
 
         serverSocket.close();

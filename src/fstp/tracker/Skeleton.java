@@ -1,4 +1,4 @@
-package tracker;
+package fstp.tracker;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -6,7 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import sockets.TCPConnection;
+import fstp.sockets.TCPConnection;
 
 public class Skeleton {
     public void handle(TCPConnection c) throws IOException {
@@ -21,7 +21,7 @@ public class Skeleton {
                 String str = buffer.readUTF();
 
                 if (str.equalsIgnoreCase("Hello world!")) {
-                    out.writeUTF("Hello client!");
+                    out.writeUTF("Hello client, " + c.getInetAddress().getHostAddress() + "!");
                     c.send(20, bufferOut);
                 } else {
                     out.writeUTF("Invalid message.");

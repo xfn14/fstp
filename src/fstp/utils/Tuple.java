@@ -1,4 +1,4 @@
-package utils;
+package fstp.utils;
 
 import java.io.Serializable;
 import java.util.Objects;
