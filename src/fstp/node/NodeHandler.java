@@ -28,6 +28,7 @@ public class NodeHandler {
 
             Frame response = this.connection.receive();
             DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.data));
+            
             return in.readUTF();
         } catch (Exception e) {
             e.printStackTrace();
