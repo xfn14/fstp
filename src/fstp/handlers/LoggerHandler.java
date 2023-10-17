@@ -10,6 +10,12 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 public class LoggerHandler {
+    /**
+     * Load logger settings
+     * 
+     * @param logger Logger to load settings to
+     * @param file  If true, save logs to file
+     */
     public static void loadLoggerSettings(Logger logger, boolean file){
         try {
             SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
