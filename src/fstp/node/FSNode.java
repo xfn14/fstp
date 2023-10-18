@@ -53,13 +53,8 @@ public class FSNode {
                 NodeHandler nodeHandler = new NodeHandler(tcpConnection);
                 logger.info("Conexão FS Track Protocol com servidor " + ip + " porta " + port);
                 
-
-                String message = stdin.readLine();
-                while (!message.equals("exit")) {
-                    String response = nodeHandler.hello(message);
-                    logger.info("Resposta do servidor: " + response);
-                    message = stdin.readLine();
-                }
+                String response = nodeHandler.ping(nodeStatus.getFiles());
+                logger.info("Resposta do servidor: " + response);
 
                 tcpConnection.close();
             } catch (UnknownHostException e) {

@@ -11,7 +11,13 @@ import fstp.sockets.TCPConnection;
 
 public class FSTracker {
     public static Logger logger = Logger.getLogger("FS-Tracker");
+    
+    private final TrackerStatus trackerStatus;
     private boolean running = true;
+
+    public FSTracker() {
+        this.trackerStatus = new TrackerStatus();
+    }
 
     public static void main(String[] args) {
         LoggerHandler.loadLoggerSettings(logger, false);
@@ -29,7 +35,7 @@ public class FSTracker {
         ServerSocket serverSocket = new ServerSocket(Constants.DEFAULT_PORT);
         logger.info("Listening on port " + Constants.DEFAULT_PORT);
 
-        Skeleton sk = new Skeleton();
+        Skeleton sk = new Skeleton(this.trackerStatus);
 
         while (running) {
             TCPConnection connection = new TCPConnection(serverSocket.accept());

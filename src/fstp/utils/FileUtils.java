@@ -27,6 +27,7 @@ public class FileUtils {
 
     /**
      * Convert a file to a string with the following format:
+     * 
      * <p>
      * <code>path*checksum*last_modified</code>
      * </p>
@@ -41,6 +42,25 @@ public class FileUtils {
         sb.append(file.getPath()).append('*');
         sb.append(fileToChecksum(file)).append('*');
         sb.append(sdf.format(getFileData(file)));
+        return sb.toString();
+    }
+
+    /**
+     * Convert a list of files to a string with the following format:
+     * 
+     * <p>
+     * <code>path*checksum*last_modified,path*checksum*last_modified,...</code>
+     * </p>
+     * 
+     * @param files
+     * @return
+     * @throws IOException
+     */
+    public static String filesToString(List<File> files) throws IOException {
+        StringBuilder sb = new StringBuilder();	
+        for (File file : files)
+            sb.append(fileToString(file)).append(',');
+        sb.deleteCharAt(sb.length() - 1);
         return sb.toString();
     }
 
