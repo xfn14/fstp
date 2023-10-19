@@ -26,7 +26,7 @@ public class NodeHandler {
         try {
             this.out.writeUTF(FileUtils.filesToString(files));
 
-            this.out.flush();
+            // this.out.flush();
             this.connection.send(10, this.buffer);
 
             Frame response = this.connection.receive();

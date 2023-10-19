@@ -11,6 +11,13 @@ public class NodeStatus {
 
     public NodeStatus(File dir) {
         this.files = FileUtils.getFiles(dir);
+
+        for (File file : this.files)
+            try {
+                System.out.println(FileUtils.fileToString(file));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
     }
 
     public List<File> getFiles() {

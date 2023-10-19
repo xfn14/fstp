@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import fstp.models.FileInfo;
 import fstp.sockets.TCPConnection;
@@ -35,7 +36,7 @@ public class Skeleton {
                     fileInfos.add(FileInfo.fromString(file));
 
                 trackerStatus.addFiles(c.getInetAddress().getHostAddress(), fileInfos);
-
+                
                 out.writeUTF("Updated files.");
                 c.send(20, bufferOut);
                 break;

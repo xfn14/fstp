@@ -21,6 +21,10 @@ public class TrackerStatus {
         return this.files.get(key);
     }
 
+    public Map<String, List<FileInfo>> getFiles() {
+        return this.files;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
