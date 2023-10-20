@@ -36,10 +36,10 @@ public class FileUtils {
      * @return String representation of file
      * @throws IOException If an I/O error occurs reading from the file or a malformed or unmappable byte sequence is read
      */
-    public static String fileToString(File file) throws IOException {
+    public static String fileToString(String path, File file) throws IOException {
         StringBuilder sb = new StringBuilder();
         SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-        sb.append(file.getPath()).append('*');
+        sb.append(file.getPath().replace(path, "")).append('*');
         sb.append(fileToChecksum(file)).append('*');
         sb.append(sdf.format(getFileData(file)));
         return sb.toString();
@@ -56,10 +56,10 @@ public class FileUtils {
      * @return
      * @throws IOException
      */
-    public static String filesToString(List<File> files) throws IOException {
+    public static String filesToString(String path, List<File> files) throws IOException {
         StringBuilder sb = new StringBuilder();	
         for (File file : files)
-            sb.append(fileToString(file)).append(',');
+            sb.append(fileToString(path, file)).append(',');
         sb.deleteCharAt(sb.length() - 1);
         return sb.toString();
     }

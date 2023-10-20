@@ -22,13 +22,24 @@ Tamanho do pacote: 4096
 
 #### Tipos de mensagens
 
-- 10 - Pedir listagem de ficheiros
-    - Payload: "Hello world!"
+##### Node
+
+- 10 - Ping! (Update node files on tracker)
+    - Payload: <file1_path>*<file1_checksum>*<file1_lastModified>,<file2_path>*<file2_checksum>*<file2_lastModified>,...
 - 11 - GET Request
     - Payload: <file1_name>,<file2_name>,...
-- 21 - Ficheiro(s) encontrado(s)
-    - Payload: <file1_path>_<file1_block1_id>_<file1_block2_id>_...,<file2_path>_<file2_block1_id>_<file2_block2_id>_...,...
-- 20 - Listagem de ficheiros
-    - Payload: <file1_path>_<file1_size>_<file1_last_modified_date>,<file2_path>_<file2_size>_<file2_last_modified_date>,...
-- 40 - Ficheiro(s) pedido(s) não encontrado(s)
-    - Payload: <file1_name>,<file2_name>,...
+- 20 - Request list of files versions
+    - Payload: LIST
+- 40 - Close connection
+    - Payload: Bye world!
+
+##### Tracker
+
+- 10 - Response to tracker ping.
+    - Payload: Pong!
+- 11 - GET Reponse
+    - Payload: <peer1_address>,<peer2_address>,...
+- 20 - Send list of files versions
+    - Payload: <file1_path>*<file1_checksum>*<file1_lastModified>^<peer1_address>~<peer2_address>~...,<file2_path>*<file2_checksum>*<file2_lastModified>^<peer2_address>~<peer3_address>~...,...
+- 40 - Close connection
+    - Payload: Goodbye.

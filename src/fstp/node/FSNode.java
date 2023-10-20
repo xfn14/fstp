@@ -17,7 +17,7 @@ import fstp.sockets.TCPConnection;
 public class FSNode {
     public static Logger logger = Logger.getLogger("FS-Tracker");
     private static final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
-    
+
     public static void main(String[] args) {
         LoggerHandler.loadLoggerSettings(logger, true);
 
@@ -28,7 +28,7 @@ public class FSNode {
         }
 
         // Get arguments
-        String path = args[0];
+        String path = args[0].charAt(args[0].length() - 1) == '/' ? args[0] : args[0] + "/";
         String ip = args[1];
         int port = args.length == 3 ? Integer.parseInt(args[2]) : Constants.DEFAULT_PORT;
 
@@ -44,25 +44,27 @@ public class FSNode {
                 return;
             }
         }
-        NodeStatus nodeStatus = new NodeStatus(dir);
+        NodeStatus nodeStatus = new NodeStatus(path, dir);
 
         // Connect to tracker
         Runnable tcpRunnable = () -> {
             try (Socket socket = new Socket(ip, port)) {
                 TCPConnection tcpConnection = new TCPConnection(socket);
-                NodeHandler nodeHandler = new NodeHandler(tcpConnection);
-                logger.info("Conexão FS Track Protocol com servidor " + ip + " porta " + port);
-                
+                NodeHandler nodeHandler = new NodeHandler(path, tcpConnection);
+
                 String response = nodeHandler.ping(nodeStatus.getFiles());
-                logger.info("Resposta do servidor: " + response);
+                if (response.equals("Pong!"))
+                    logger.info("FS Track Protocol connected to Tracker on " + ip + ":" + port);
+                else {
+                    logger.severe("Error connecting to Tracker.");
+                    return;
+                }
 
                 tcpConnection.close();
             } catch (UnknownHostException e) {
                 logger.severe(ip + " is not a valid IP address.");
-                e.printStackTrace();
             } catch (IOException e) {
-                logger.severe("Error connecting to " + ip + " on port " + port);
-                e.printStackTrace();
+                logger.severe("Error connecting to " + ip + " on port " + port + ". Is the Tracker running?");
             }
         };
         tcpRunnable.run();
@@ -71,8 +73,7 @@ public class FSNode {
         Runnable udpRunnable = () -> {
             try {
                 DatagramSocket socket = new DatagramSocket();
-                logger.info("FS Transfer Protocol à escuta na porta UDP " + port);
-
+                logger.info("FS Transfer Protocol listening using UDP on " + port);
                 
             } catch (SocketException e) {
                 e.printStackTrace();

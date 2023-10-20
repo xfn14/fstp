@@ -5,9 +5,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import fstp.models.FileInfo;
 import fstp.sockets.TCPConnection;
@@ -30,14 +31,27 @@ public class Skeleton {
             case 10:
                 String str = buffer.readUTF();
                 String[] files = str.split(",");
-                List<FileInfo> fileInfos = new ArrayList<>();
+                List<FileInfo> fileInfos = Arrays.stream(files)
+                    .map(FileInfo::fromString)
+                    .collect(Collectors.toList());
 
-                for (String file : files)
-                    fileInfos.add(FileInfo.fromString(file));
-
-                trackerStatus.addFiles(c.getInetAddress().getHostAddress(), fileInfos);
+                trackerStatus.addFiles(c.getAddress(), fileInfos);
                 
-                out.writeUTF("Updated files.");
+                out.writeUTF("Pong!");
+                c.send(20, bufferOut);
+                break;
+            
+            case 20:
+                Map<FileInfo, List<String>> updateList = trackerStatus.getUpdateList(c.getAddress());
+                String response = updateList.entrySet().stream()
+                    .map(entry -> {
+                        FileInfo fileInfo = entry.getKey();
+                        List<String> peers = entry.getValue();
+                        return String.format("%s*%d*%s^%s", fileInfo.getPath(), fileInfo.getChecksum(), fileInfo.getLastModified(), String.join("~", peers));
+                    })
+                    .collect(Collectors.joining(","));
+
+                out.writeUTF(response);
                 c.send(20, bufferOut);
                 break;
         }

@@ -57,6 +57,10 @@ public class TCPConnection implements AutoCloseable {
         return this.socket.getInetAddress();
     }
 
+    public String getAddress() {
+        return this.getInetAddress().getHostAddress();
+    }
+
     public static class Frame {
         public final int tag;
         public final byte[] data;
