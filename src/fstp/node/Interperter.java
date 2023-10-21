@@ -34,7 +34,7 @@ public class Interperter {
                     case "GET":
                         get(args[1]);
                         break;
-                    case "EXIT":
+                    case "q":
                         exit();
                         break;
                     default:
@@ -48,6 +48,8 @@ public class Interperter {
 
     private String list() {
         Map<String, List<String>> res = nodeHandler.list();
+        if (res.size() == 0) return "Everything up-to-date.";
+
         Map<FileInfo, List<String>> resFiles = res.entrySet().stream()
             .collect(
                 Collectors.toMap(

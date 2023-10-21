@@ -19,7 +19,7 @@ public class NodeStatus {
             this.fileInfos.add(new FileInfo(
                 file.getPath().replace(path, ""),
                 FileUtils.fileToChecksum(file),
-                sdf.format(FileUtils.getFileData(file))
+                FileUtils.getFileData(file)
             ));
         }
     }

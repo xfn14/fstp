@@ -40,8 +40,12 @@ public class Skeleton {
                 out.writeUTF("Pong!");
                 c.send(20, bufferOut);
                 break;
-            
             case 20:
+                str = buffer.readUTF();
+                if (!str.equals("LIST")) break;
+
+                System.out.println("goods");
+
                 Map<FileInfo, List<String>> updateList = trackerStatus.getUpdateList(c.getAddress());
                 String response = updateList.entrySet().stream()
                     .map(entry -> {

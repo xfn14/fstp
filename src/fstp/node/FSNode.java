@@ -50,7 +50,6 @@ public class FSNode {
             return;
         }
 
-        // Connect to tracker
         Runnable tcpRunnable = () -> {
             try (Socket socket = new Socket(ip, port)) {
                 TCPConnection tcpConnection = new TCPConnection(socket);
@@ -75,9 +74,7 @@ public class FSNode {
                 logger.severe("Error connecting to " + ip + " on port " + port + ". Is the Tracker running?");
             }
         };
-        tcpRunnable.run();
 
-        // Start UDP server
         Runnable udpRunnable = () -> {
             try {
                 DatagramSocket socket = new DatagramSocket();
@@ -87,6 +84,8 @@ public class FSNode {
                 e.printStackTrace();
             }
         };
+
         udpRunnable.run();
+        tcpRunnable.run();
     }
 }

@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -31,9 +30,11 @@ public class NodeHandler {
     public String ping(List<FileInfo> files) {
         try {
             StringBuilder sb = new StringBuilder();
-            for (FileInfo file : files)
-                sb.append(file.toString()).append(",");
-            sb.deleteCharAt(sb.length() - 1);
+            if (files.size() > 0) {
+                for (FileInfo file : files)
+                    sb.append(file.toString()).append(",");
+                sb.deleteCharAt(sb.length() - 1);
+            }
 
             this.out.writeUTF(sb.toString());
             this.connection.send(10, this.buffer);
@@ -59,6 +60,7 @@ public class NodeHandler {
             DataInputStream in = new DataInputStream(new ByteArrayInputStream(packet.data));
             String response = in.readUTF();
 
+            if (response.equals("")) return new HashMap<>();
             Map<String, List<String>> res = Arrays.stream(response.split(","))
                 .map(file -> file.split("\\^"))
                 .collect(Collectors.toMap(
