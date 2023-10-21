@@ -25,7 +25,7 @@ public class FileInfo {
 
     @Override
     public String toString() {
-        return String.format("Path: %s\nChecksum: %d\nLast Modified: %s", this.path, this.checksum, this.lastModified);
+        return String.format("%s*%d*%s", this.path, this.checksum, this.lastModified);
     }
 
     /**

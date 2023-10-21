@@ -38,7 +38,7 @@ public class FileUtils {
      */
     public static String fileToString(String path, File file) throws IOException {
         StringBuilder sb = new StringBuilder();
-        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         sb.append(file.getPath().replace(path, "")).append('*');
         sb.append(fileToChecksum(file)).append('*');
         sb.append(sdf.format(getFileData(file)));

@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import fstp.models.FileInfo;
 import fstp.sockets.TCPConnection;
 import fstp.sockets.TCPConnection.Frame;
-import fstp.utils.FileUtils;
 
 public class NodeHandler {
     private final String path;
@@ -28,11 +28,16 @@ public class NodeHandler {
         this.out = new DataOutputStream(this.buffer);
     }
 
-    public String ping(List<File> files) {
+    public String ping(List<FileInfo> files) {
         try {
-            this.out.writeUTF(FileUtils.filesToString(path, files));
+            StringBuilder sb = new StringBuilder();
+            for (FileInfo file : files)
+                sb.append(file.toString()).append(",");
+            sb.deleteCharAt(sb.length() - 1);
 
+            this.out.writeUTF(sb.toString());
             this.connection.send(10, this.buffer);
+            FSNode.logger.info("Sent ping to tracker...\nPayload: " + sb.toString() + "\n");
 
             Frame response = this.connection.receive();
             DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.data));
@@ -42,7 +47,7 @@ public class NodeHandler {
             e.printStackTrace();
         }
 
-        return "Hello world!";
+        return "Error";
     }
 
     public Map<String, List<String>> list() {
