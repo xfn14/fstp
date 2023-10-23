@@ -2,12 +2,14 @@ package fstp.node;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import fstp.models.FileInfo;
+import fstp.utils.Tuple;
 
 public class Interperter {
     private static final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
@@ -32,6 +34,11 @@ public class Interperter {
                         FSNode.logger.info("\n" + list());
                         break;
                     case "GET":
+                        if (args.length < 2) {
+                            System.out.println("Invalid command. Usage: GET <file_path>");
+                            break;
+                        }
+
                         get(args[1]);
                         break;
                     case "q":
@@ -59,7 +66,7 @@ public class Interperter {
             );
 
         StringBuilder sb = new StringBuilder();
-        Map<String, FileInfo> upToDate = nodeStatus.getFileInfos().stream()
+        Map<String, FileInfo> upToDate = nodeStatus.getFileInfos().values().stream()
             .collect(Collectors.toMap(
                 FileInfo::getPath,
                 fileInfo -> fileInfo
@@ -95,11 +102,16 @@ public class Interperter {
         return sb.toString();
     }
 
-    private void get(String filename) {
-        FSNode.logger.info("Still needs to be implemented.");
+    private void get(String file) {
+        Tuple<Integer, List<String>> response = nodeHandler.get(file);
+        if (response.getX() == 11) {
+            // TODO Init file download between node and peers
+        } else if (response.getX() == 41) FSNode.logger.warning("Could not find files: " + String.join(", ", response.getY()));
+        else FSNode.logger.warning("Error getting files.");
     }
 
     private void exit() {
         running = false;
+        nodeHandler.exit();   
     }
 }

@@ -7,6 +7,7 @@ import java.net.SocketException;
 import java.net.DatagramSocket;
 import java.net.UnknownHostException;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import fstp.Constants;
 import fstp.handlers.LoggerHandler;
@@ -44,7 +45,7 @@ public class FSNode {
 
         NodeStatus nodeStatus;
         try {
-            nodeStatus = new NodeStatus(path, dir);
+            nodeStatus = new NodeStatus(dir);
         } catch (IOException e) {
             logger.severe("Error loading files from " + path);
             return;
@@ -55,17 +56,23 @@ public class FSNode {
                 TCPConnection tcpConnection = new TCPConnection(socket);
                 NodeHandler nodeHandler = new NodeHandler(path, tcpConnection);
 
-                String response = nodeHandler.ping(nodeStatus.getFileInfos());
-                if (response.equals("Pong!")) {
-                    logger.info("FS Track Protocol connected to Tracker on " + ip + ":" + port);
-                
-                    // Start interpreter
-                    Interperter interperter = new Interperter(nodeHandler, nodeStatus);
-                    interperter.run();
-                } else {
-                    logger.severe("Error connecting to Tracker.");
+                String response = nodeHandler.ping(nodeStatus.getFileInfos().values().stream().collect(Collectors.toList()));
+                if (response.equals("Error")) {
+                    logger.severe("Error connecting to Tracker on " + ip + ":" + port);
                     return;
                 }
+
+                nodeStatus.clearPeers();
+                if (response.length() != 0) {
+                    String[] peers = response.split(",");
+                    for (String peer : peers)
+                        nodeStatus.addPeer(peer);
+                }
+
+                logger.info("FS Track Protocol connected to Tracker on " + ip + ":" + port);
+                
+                Interperter interperter = new Interperter(nodeHandler, nodeStatus);
+                interperter.run();
 
                 tcpConnection.close();
             } catch (UnknownHostException e) {

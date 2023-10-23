@@ -37,9 +37,11 @@ Tamanho do pacote: 4096
 
 - 10 - Response to tracker ping.
     - Payload: Pong!
-- 11 - GET Reponse
+- 11 - GET Reponse OK
     - Payload: <peer1_address>,<peer2_address>,...
 - 20 - Send list of files versions
     - Payload: <file1_path>*<file1_checksum>*<file1_lastModified>^<peer1_address>~<peer2_address>~...,<file2_path>*<file2_checksum>*<file2_lastModified>^<peer2_address>~<peer3_address>~...,...
 - 40 - Close connection
     - Payload: Goodbye.
+- 41 - GET Response Fail
+    - Payload: <file1_failed>,<file2_failed>,...

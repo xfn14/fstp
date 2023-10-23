@@ -1,19 +1,37 @@
 package fstp.tracker;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import fstp.models.FileInfo;
 
 public class TrackerStatus {
     private final Map<String, List<FileInfo>> files;
-    private final Map<FileInfo, List<String>> filesToClients; // TODO: Add a map of files to clients
 
     public TrackerStatus() {
         this.files = new HashMap<>();
-        this.filesToClients = new HashMap<>();
+    }
+
+    public FileInfo getMostRecentFile(String path) {
+        return files.values().stream()
+            .flatMap(List::stream)
+            .filter(fileInfo -> fileInfo.getPath().equals(path))
+            .max(Comparator.comparing(FileInfo::getLastModified))
+            .orElse(null);
+    }
+
+    public List<String> getFilePeers(String path) {
+        FileInfo file = this.getMostRecentFile(path);
+        if (file == null) return null;
+
+        return this.files.entrySet().stream()
+            .filter(entry -> entry.getValue().contains(file))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
     }
 
     // public Map<FileInfo, List<String>> getUpdateList(String clientAddress) {
@@ -140,14 +158,7 @@ public class TrackerStatus {
         return this.files;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (String key : this.files.keySet()) {
-            sb.append(key + "\n");
-            for (FileInfo fileInfo : this.files.get(key))
-                sb.append("\t" + fileInfo + "\n");
-        }
-        return sb.toString();
+    public void removeFiles(String key) {
+        this.files.remove(key);
     }
 }

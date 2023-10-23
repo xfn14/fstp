@@ -37,14 +37,34 @@ public class Skeleton {
 
                 trackerStatus.addFiles(c.getAddress(), fileInfos);
                 
-                out.writeUTF("Pong!");
-                c.send(20, bufferOut);
+                String res = trackerStatus.getFiles().keySet().stream()
+                    .collect(Collectors.joining(","));
+                out.writeUTF(res);
+                c.send(10, bufferOut);
+                break;
+            case 11:
+                String fileToGet = buffer.readUTF();
+                List<String> peer = trackerStatus.getFilePeers(fileToGet);
+                if (peer == null) {
+                    out.writeUTF("Error");
+                    c.send(41, bufferOut);
+                    break;
+                }
+
+                if (peer.size() == 0 || (peer.size() == 1 && peer.get(0).equals(c.getAddress()))) {
+                    out.writeUTF("No peers");
+                    c.send(41, bufferOut);
+                    break;
+                }
+
+                String r = peer.stream()
+                    .collect(Collectors.joining(","));
+                out.writeUTF(r);
+                c.send(11, bufferOut);
                 break;
             case 20:
                 str = buffer.readUTF();
                 if (!str.equals("LIST")) break;
-
-                System.out.println("goods");
 
                 Map<FileInfo, List<String>> updateList = trackerStatus.getUpdateList(c.getAddress());
                 String response = updateList.entrySet().stream()
@@ -57,6 +77,12 @@ public class Skeleton {
 
                 out.writeUTF(response);
                 c.send(20, bufferOut);
+                break;
+            case 40:
+                str = buffer.readUTF();
+                if (!str.equals("Bye world!")) break;
+
+                trackerStatus.removeFiles(c.getAddress());
                 break;
         }
 
