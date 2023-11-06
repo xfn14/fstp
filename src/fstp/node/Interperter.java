@@ -35,7 +35,7 @@ public class Interperter {
                         break;
                     case "GET":
                         if (args.length < 2) {
-                            System.out.println("Invalid command. Usage: GET <file_path>");
+                            FSNode.logger.warning("Invalid usage. Usage: GET <file_path>");
                             break;
                         }
 
@@ -45,10 +45,10 @@ public class Interperter {
                         exit();
                         break;
                     default:
-                        System.out.println("Invalid command.");
+                        FSNode.logger.warning("Invalid command.");
                 }
             } catch (Exception e) {
-                System.out.println("Error reading command.");
+                FSNode.logger.warning("Error reading command.");
             }
         }
     }
@@ -105,8 +105,13 @@ public class Interperter {
     private void get(String file) {
         Tuple<Integer, List<String>> response = nodeHandler.get(file);
         if (response.getX() == 11) {
-            // TODO Init file download between node and peers
-        } else if (response.getX() == 41) FSNode.logger.warning("Could not find files: " + String.join(", ", response.getY()));
+            if (response.getY() == null || response.getY().size() == 0) {
+                FSNode.logger.warning("No peers for file " + file);
+                return;
+            }
+
+            
+        } else if (response.getX() == 41) FSNode.logger.warning("Could not find file " + file);
         else FSNode.logger.warning("Error getting files.");
     }
 

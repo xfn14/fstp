@@ -54,7 +54,7 @@ public class FSNode {
         Runnable tcpRunnable = () -> {
             try (Socket socket = new Socket(ip, port)) {
                 TCPConnection tcpConnection = new TCPConnection(socket);
-                NodeHandler nodeHandler = new NodeHandler(path, tcpConnection);
+                NodeHandler nodeHandler = new NodeHandler(tcpConnection);
 
                 String response = nodeHandler.ping(nodeStatus.getFileInfos().values().stream().collect(Collectors.toList()));
                 if (response.equals("Error")) {

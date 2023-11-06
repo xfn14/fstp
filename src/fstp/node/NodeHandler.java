@@ -17,13 +17,11 @@ import fstp.sockets.TCPConnection.Frame;
 import fstp.utils.Tuple;
 
 public class NodeHandler {
-    private final String path;
     private final TCPConnection connection;
     private final ByteArrayOutputStream buffer;
     private final DataOutputStream out;
     
-    public NodeHandler(String path, TCPConnection connection) {
-        this.path = path;
+    public NodeHandler(TCPConnection connection) {
         this.connection = connection;
         this.buffer = new ByteArrayOutputStream();
         this.out = new DataOutputStream(this.buffer);

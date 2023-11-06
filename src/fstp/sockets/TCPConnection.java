@@ -49,6 +49,7 @@ public class TCPConnection implements AutoCloseable {
         return new Frame(tag, data);
     }
 
+    @Override
     public void close() throws IOException {
         this.socket.close();
     }
