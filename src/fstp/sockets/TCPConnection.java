@@ -44,7 +44,7 @@ public class TCPConnection implements AutoCloseable {
         }
 
         this.out.writeInt(4 + data.length);
-        this.out.writeInt(tag);
+        this.out.writeByte((byte) tag);
         this.out.write(data);
         this.out.flush();
     }
@@ -52,7 +52,7 @@ public class TCPConnection implements AutoCloseable {
     public Frame receive() throws IOException {
         int size = this.in.readInt();
         byte[] data = new byte[size - 4];
-        int tag = this.in.readInt();
+        byte tag = this.in.readByte();
         this.in.readFully(data);
 
         if (Constants.DEDUG) {

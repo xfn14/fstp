@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,8 @@ public class NodeHandler {
     public int registerFile(FileInfo fileInfo) {
         try {
             List<Long> chunks = fileInfo.getChunks();
-            this.out.writeUTF(fileInfo.toString());
+            this.out.writeUTF(fileInfo.getPath());
+            this.out.writeLong(fileInfo.getLastModified().getTime());
             this.out.writeInt(chunks.size());
 
             for (Long chunk : chunks)
@@ -70,7 +72,8 @@ public class NodeHandler {
             int len = in.readInt();
 
             for (int i = 0; i < len; i++) {
-                String str = in.readUTF();
+                String path = in.readUTF();
+                long lastModified = in.readLong();
                 int npeers = in.readInt();
                 if (npeers == 0) continue;
 
@@ -78,7 +81,7 @@ public class NodeHandler {
                 for (int j = 0; j < npeers; j++) 
                     peers.add(in.readUTF());
 
-                res.put(FileInfo.fromString(str), peers);
+                res.put(new FileInfo(path, new Date(lastModified)), peers);
             }
         } catch (Exception e) {
             e.printStackTrace();

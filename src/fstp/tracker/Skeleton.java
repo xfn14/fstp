@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -31,8 +32,9 @@ public class Skeleton {
 
         switch (frame.getTag()) {
             case 1:
-                String str = buffer.readUTF();
-                FileInfo fileInfo = FileInfo.fromString(str);
+                String path = buffer.readUTF();
+                long lastModified = buffer.readLong();
+                FileInfo fileInfo = new FileInfo(path, new Date(lastModified));
                 int nblocks = buffer.readInt();
 
                 if (nblocks == 0) {
@@ -58,31 +60,24 @@ public class Skeleton {
                     trackerStatus.addFile(c.getDevString(), fileInfo);
                 }
                     
-                FSTracker.logger.info("Received file from " + c.getDevString() + "\nPayload: " + str + "\n");
+                FSTracker.logger.info("Received file " + path + " - " + new Date(lastModified) + " from " + c.getDevString() + "\n");
 
                 c.send((byte) (!blocks.contains(-1L) ? 10 : 40), bufferOut);
                 break;
             case 2:
                 Map<FileInfo, List<String>> toUpdate = trackerStatus.getUpdateList(c.getDevString());
-                System.out.println(toUpdate.size() + " files to update");
-                for (Entry<FileInfo, List<String>> test : toUpdate.entrySet()) {
-                    System.out.println(test.getKey().toString() + " " + test.getValue().size());
-                }
                 if (toUpdate.size() == 0) {
                     c.send((byte) 21, bufferOut);
                     break;
                 }
                 
                 out.writeInt(toUpdate.size());
-                System.out.println(toUpdate.size() + " files to update");
                 for (Entry<FileInfo, List<String>> f : toUpdate.entrySet()) {
-                    out.writeUTF(f.getKey().toString());
-                    System.out.println(f.getKey().toString() + " " + f.getValue().size());
+                    out.writeUTF(f.getKey().getPath());
+                    out.writeLong(f.getKey().getLastModified().getTime());
                     out.writeInt(f.getValue().size());
-                    for (String addr : f.getValue()) {
+                    for (String addr : f.getValue())
                         out.writeUTF(addr);
-                        System.out.println(addr);
-                    }
                 }
                 
                 c.send((byte) 20, bufferOut);
