@@ -1,6 +1,8 @@
 package fstp.tracker;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,146 +10,96 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import fstp.models.FileInfo;
+import fstp.utils.Tuple;
 
 public class TrackerStatus {
-    private final Map<String, List<FileInfo>> files;
+    private Map<String, List<FileInfo>> files;
 
     public TrackerStatus() {
         this.files = new HashMap<>();
     }
 
-    public FileInfo getMostRecentFile(String path) {
-        return files.values().stream()
+    public FileInfo getMostRecentFile(String path, Date date) {
+        return this.files.values().stream()
             .flatMap(List::stream)
             .filter(fileInfo -> fileInfo.getPath().equals(path))
             .max(Comparator.comparing(FileInfo::getLastModified))
             .orElse(null);
     }
 
-    public List<String> getFilePeers(String path) {
-        FileInfo file = this.getMostRecentFile(path);
-        if (file == null) return null;
-
-        return this.files.entrySet().stream()
-            .filter(entry -> entry.getValue().contains(file))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toList());
-    }
-
-    // public Map<FileInfo, List<String>> getUpdateList(String clientAddress) {
-    //     Map<FileInfo, List<String>> updateList = new HashMap<>();
-    //     List<FileInfo> clientFiles = this.files.get(clientAddress);
-
-    //     for (Entry<String, List<FileInfo>> entry : this.files.entrySet()) {
-    //         String peerAddress = entry.getKey();
-    //         if (peerAddress.equals(clientAddress)) continue;
-
-    //         List<FileInfo> peerFiles = entry.getValue();
-
-    //         for (FileInfo peerFileInfo : peerFiles)
-    //             if (!fileExistsInList(peerFileInfo, clientFiles))
-    //                 addOrUpdateFileInfo(updateList, peerFileInfo, peerAddress);
-    //     }
-
-    //     return updateList;
-    // }
-
-    // private boolean fileExistsInList(FileInfo fileInfo, List<FileInfo> fileInfoList) {
-    //     return fileInfoList.stream()
-    //         .anyMatch(clientFileInfo -> clientFileInfo.getPath().equals(fileInfo.getPath()));
-    // }
-
-    // private void addOrUpdateFileInfo(Map<FileInfo, List<String>> updateList, FileInfo fileInfo, String peerAddress) {
-    //     updateList.compute(fileInfo, (key, value) -> {
-    //         if (value == null) {
-    //             return new ArrayList<>(Collections.singletonList(peerAddress));
-    //         } else {
-    //             if (fileInfo.getLastModified().before(key.getLastModified())) {
-    //                 key.setLastModified(fileInfo.getLastModified());
-    //                 key.setChecksum(fileInfo.getChecksum());
-    //                 return new ArrayList<>(Collections.singletonList(peerAddress));
-    //             } else if (fileInfo.getLastModified().equals(key.getLastModified()))
-    //                 value.add(peerAddress);
-    //             return value;
-    //         }
-    //     });
-    // }
-
-    public Map<FileInfo, List<String>> getUpdateList(String clientAddress) {
-        Map<FileInfo, List<String>> updateList = new HashMap<>();
-        List<FileInfo> clientFiles = this.files.get(clientAddress);
-        System.out.println(clientFiles);
-        System.out.println(clientAddress);
-
+    public List<String> getPeersWithFile(FileInfo fileInfo) {
+        List<String> peers = new ArrayList<>();
         for (Entry<String, List<FileInfo>> entry : this.files.entrySet()) {
-            String peerAddress = entry.getKey();
-            if (peerAddress.equals(clientAddress)) continue;
+            String peer = entry.getKey();
+            List<FileInfo> files = entry.getValue();
 
-            List<FileInfo> peerFiles = entry.getValue();
-
-            for (FileInfo peerFileInfo : peerFiles) {
-                boolean found = false;
-                for (FileInfo clientFileInfo : clientFiles) {
-                    if (peerFileInfo.getPath().equals(clientFileInfo.getPath())) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    if (updateList.containsKey(peerFileInfo)) {
-                        updateList.get(peerFileInfo).add(peerAddress);
-                        continue;
-                    }
-
-                    for (Entry<FileInfo, List<String>> updateEntry : updateList.entrySet()) {
-                        FileInfo updateFileInfo = updateEntry.getKey();
-                        if (updateFileInfo.getPath().equals(peerFileInfo.getPath())) {
-                            if (updateFileInfo.getLastModified().before(peerFileInfo.getLastModified())) {
-                                updateEntry.getKey().setLastModified(peerFileInfo.getLastModified());
-                                updateEntry.getKey().setChecksum(peerFileInfo.getChecksum());
-                                updateEntry.setValue(List.of(peerAddress));
-                            } else if (updateFileInfo.getLastModified().equals(peerFileInfo.getLastModified())) {
-                                updateEntry.getValue().add(peerAddress);
-                                continue;
-                            }
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found) {
-                        updateList.put(peerFileInfo, List.of(peerAddress));
-                    }
-                } else {
-                    for (Entry<FileInfo, List<String>> updateEntry : updateList.entrySet()) {
-                        FileInfo updateFileInfo = updateEntry.getKey();
-                        if (updateFileInfo.getPath().equals(peerFileInfo.getPath())) {
-                            if (updateFileInfo.getLastModified().before(peerFileInfo.getLastModified())) {
-                                updateEntry.getKey().setLastModified(peerFileInfo.getLastModified());
-                                updateEntry.getKey().setChecksum(peerFileInfo.getChecksum());
-                                updateEntry.setValue(List.of(peerAddress));
-                            } else if (updateFileInfo.getLastModified().equals(peerFileInfo.getLastModified())) {
-                                updateEntry.getValue().add(peerAddress);
-                                continue;
-                            }
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found) {
-                        updateList.put(peerFileInfo, List.of(peerAddress));
-                    }
+            for (FileInfo file : files) {
+                if (file.equals(fileInfo)) {
+                    peers.add(peer);
+                    break;
                 }
             }
         }
-
-        return updateList;
+        return peers;
     }
 
-    public void addFiles(String key, List<FileInfo> files) {
-        this.files.put(key, files);
+    public Map<FileInfo, List<String>> getUpdateList(String addr) {
+        Map<FileInfo, List<String>> updateList = new HashMap<>();
+        Map<String, Tuple<FileInfo, List<String>>> mostRecent = new HashMap<>();
+        Map<String, FileInfo> clientFiles = this.files.get(addr).stream()
+            .collect(Collectors.toMap(FileInfo::getPath, fileInfo -> fileInfo));
+
+        if (clientFiles == null) return null;
+        if (this.files.size() == 0) return updateList;
+
+        for (Entry<String, List<FileInfo>> entry : this.files.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue().stream().map(FileInfo::getPath).collect(Collectors.joining(", ")));
+            String peerAddr = entry.getKey();
+            if (peerAddr.equals(addr)) continue;
+
+            List<FileInfo> peerFiles = entry.getValue();
+            if (peerFiles == null || peerFiles.size() == 0) continue;
+
+            for (FileInfo peerFileInfo : peerFiles) {
+                FileInfo mostRecentFileInfo = this.getMostRecentFile(peerFileInfo.getPath(), peerFileInfo.getLastModified());
+                if (mostRecent.containsKey(mostRecentFileInfo.getPath())) continue;
+
+                List<String> peersWithFile = this.getPeersWithFile(mostRecentFileInfo);
+                if (peersWithFile.size() == 0) continue;
+                if (peersWithFile.size() == 1 && peersWithFile.get(0).equals(addr)) continue;
+                if (peersWithFile.contains(addr)) continue;
+
+                mostRecent.put(mostRecentFileInfo.getPath(), new Tuple<>(mostRecentFileInfo, peersWithFile));
+            }
+        }
+        
+        if (mostRecent.size() == 0)
+            return updateList;
+
+        return mostRecent.entrySet().stream()
+            .collect(Collectors.toMap(
+                entry -> entry.getValue().getX(),
+                entry -> entry.getValue().getY()
+            ));
+    }
+
+    public void addFile(String key, FileInfo file) {
+        if (this.files.containsKey(key)) {
+            List<FileInfo> files = this.files.get(key);
+            boolean found = false;
+
+            for (FileInfo fileInfo : files)
+                if (fileInfo.getPath().equals(file.getPath())) {
+                    fileInfo.setLastModified(file.getLastModified());
+                    fileInfo.setChunks(file.getChunks());
+                    break;
+                }
+
+            if (!found) files.add(file);
+            this.files.put(key, files);
+        } else {
+            this.files.put(key, new ArrayList<>(List.of(file)));
+        }
     }
 
     public List<FileInfo> getFiles(String key) {
@@ -160,5 +112,9 @@ public class TrackerStatus {
 
     public void removeFiles(String key) {
         this.files.remove(key);
+    }
+
+    public void initNode(String devString) {
+        this.files.put(devString, new ArrayList<>());
     }
 }

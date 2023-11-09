@@ -39,8 +39,9 @@ public class FSTracker {
 
         while (running) {
             TCPConnection connection = new TCPConnection(serverSocket.accept());
-            logger.info("New connection from " + connection.getInetAddress().getHostAddress());
-
+            logger.info("New connection from " + connection.getDevString());
+            trackerStatus.initNode(connection.getDevString());
+            
             Runnable r = () -> {
                 try (connection) {
                     for (; ; ) sk.handle(connection);

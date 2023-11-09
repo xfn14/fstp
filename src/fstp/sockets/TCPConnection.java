@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
+import fstp.Constants;
+import fstp.models.Frame;
+
 public class TCPConnection implements AutoCloseable {
     private final Socket socket;
 
@@ -21,7 +24,7 @@ public class TCPConnection implements AutoCloseable {
     }
 
     public void send(Frame frame) throws IOException {
-        this.send(frame.tag, frame.data);
+        this.send(frame.getTag(), frame.getData());
     }
 
     public void send(int tag, ByteArrayOutputStream byteArray) throws IOException {
@@ -34,6 +37,12 @@ public class TCPConnection implements AutoCloseable {
     }
 
     public void rawSend(int tag, byte[] data) throws IOException {
+        if (Constants.DEDUG) {
+            System.out.println("Sent " + data.length + " bytes to " + this.getDevString());
+            System.out.println("Tag: " + tag);
+            System.out.println("Data: " + new String(data));
+        }
+
         this.out.writeInt(4 + data.length);
         this.out.writeInt(tag);
         this.out.write(data);
@@ -45,6 +54,12 @@ public class TCPConnection implements AutoCloseable {
         byte[] data = new byte[size - 4];
         int tag = this.in.readInt();
         this.in.readFully(data);
+
+        if (Constants.DEDUG) {
+            System.out.println("Received " + size + " bytes from " + this.getDevString());
+            System.out.println("Tag: " + tag);
+            System.out.println("Data: " + new String(data));
+        }
 
         return new Frame(tag, data);
     }
@@ -62,13 +77,11 @@ public class TCPConnection implements AutoCloseable {
         return this.getInetAddress().getHostAddress();
     }
 
-    public static class Frame {
-        public final int tag;
-        public final byte[] data;
+    public int getPort() {
+        return this.socket.getPort();
+    }
 
-        public Frame(int tag, byte[] data) {
-            this.tag = tag;
-            this.data = data;
-        }
+    public String getDevString() {
+        return this.getAddress() + ":" + this.getPort();
     }
 }

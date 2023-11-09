@@ -6,15 +6,18 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.DatagramSocket;
 import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import fstp.Constants;
 import fstp.handlers.LoggerHandler;
+import fstp.models.FileInfo;
 import fstp.sockets.TCPConnection;
 
 public class FSNode {
-    public static Logger logger = Logger.getLogger("FS-Tracker");
+    public static Logger logger = Logger.getLogger("FS-Node");
 
     public static void main(String[] args) {
         LoggerHandler.loadLoggerSettings(logger, true);
@@ -56,18 +59,29 @@ public class FSNode {
                 TCPConnection tcpConnection = new TCPConnection(socket);
                 NodeHandler nodeHandler = new NodeHandler(tcpConnection);
 
-                String response = nodeHandler.ping(nodeStatus.getFileInfos().values().stream().collect(Collectors.toList()));
-                if (response.equals("Error")) {
-                    logger.severe("Error connecting to Tracker on " + ip + ":" + port);
+                boolean res = nodeHandler.registerFiles(nodeStatus.getFileInfos().values().stream().collect(Collectors.toList()));
+                if (!res) {
+                    logger.severe("Error registering some files to Tracker.");
                     return;
                 }
 
-                nodeStatus.clearPeers();
-                if (response.length() != 0) {
-                    String[] peers = response.split(",");
-                    for (String peer : peers)
-                        nodeStatus.addPeer(peer);
+                Map<FileInfo, List<String>> response = nodeHandler.getUpdateList();
+                if (response.size() == 0) {
+                    logger.info("Everything up-to-date.");
+                    return;
+                } else {
+                    logger.info("Files to update:");
+                    for (Map.Entry<FileInfo, List<String>> entry : response.entrySet()) {
+                        logger.info(entry.getKey().getPath() + " -> " + entry.getValue().stream().collect(Collectors.joining(", ")));
+                    }
                 }
+
+                // nodeStatus.clearPeers();
+                // if (response.length() != 0) {
+                //     String[] peers = response.split(",");
+                //     for (String peer : peers)
+                //         nodeStatus.addPeer(peer);
+                // }
 
                 logger.info("FS Track Protocol connected to Tracker on " + ip + ":" + port);
                 

@@ -8,9 +8,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import fstp.models.FileInfo;
+import fstp.models.Frame;
 import fstp.sockets.TCPConnection;
 
 public class Skeleton {
@@ -21,68 +23,69 @@ public class Skeleton {
     }
 
     public void handle(TCPConnection c) throws IOException {
-        TCPConnection.Frame frame = c.receive();
-        DataInputStream buffer = new DataInputStream(new ByteArrayInputStream(frame.data));
+        Frame frame = c.receive();
+        DataInputStream buffer = new DataInputStream(new ByteArrayInputStream(frame.getData()));
 
         ByteArrayOutputStream bufferOut = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(bufferOut);
 
-        switch (frame.tag) {
-            case 10:
+        switch (frame.getTag()) {
+            case 1:
                 String str = buffer.readUTF();
-                String[] files = str.split(",");
-                List<FileInfo> fileInfos = Arrays.stream(files)
-                    .map(FileInfo::fromString)
+                FileInfo fileInfo = FileInfo.fromString(str);
+                int nblocks = buffer.readInt();
+
+                if (nblocks == 0) {
+                    trackerStatus.addFile(c.getDevString(), fileInfo);
+                    c.send((byte) 10, bufferOut);
+                    break;
+                }
+
+                List<Long> blocks = Arrays.stream(new long[nblocks])
+                    .mapToObj(i -> {
+                        try {
+                            return buffer.readLong();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            return -1L;
+                        }
+                    })
                     .collect(Collectors.toList());
 
-                trackerStatus.addFiles(c.getAddress(), fileInfos);
+                fileInfo.setChunks(blocks);
+
+                if (!blocks.contains(-1L)) {
+                    trackerStatus.addFile(c.getDevString(), fileInfo);
+                }
+                    
+                FSTracker.logger.info("Received file from " + c.getDevString() + "\nPayload: " + str + "\n");
+
+                c.send((byte) (!blocks.contains(-1L) ? 10 : 40), bufferOut);
+                break;
+            case 2:
+                Map<FileInfo, List<String>> toUpdate = trackerStatus.getUpdateList(c.getDevString());
+                System.out.println(toUpdate.size() + " files to update");
+                for (Entry<FileInfo, List<String>> test : toUpdate.entrySet()) {
+                    System.out.println(test.getKey().toString() + " " + test.getValue().size());
+                }
+                if (toUpdate.size() == 0) {
+                    c.send((byte) 21, bufferOut);
+                    break;
+                }
                 
-                String res = trackerStatus.getFiles().keySet().stream()
-                    .collect(Collectors.joining(","));
-                out.writeUTF(res);
-                c.send(10, bufferOut);
-                break;
-            case 11:
-                String fileToGet = buffer.readUTF();
-                List<String> peer = trackerStatus.getFilePeers(fileToGet);
-                if (peer == null) {
-                    out.writeUTF("Error");
-                    c.send(41, bufferOut);
-                    break;
+                out.writeInt(toUpdate.size());
+                System.out.println(toUpdate.size() + " files to update");
+                for (Entry<FileInfo, List<String>> f : toUpdate.entrySet()) {
+                    out.writeUTF(f.getKey().toString());
+                    System.out.println(f.getKey().toString() + " " + f.getValue().size());
+                    out.writeInt(f.getValue().size());
+                    for (String addr : f.getValue()) {
+                        out.writeUTF(addr);
+                        System.out.println(addr);
+                    }
                 }
-
-                if (peer.size() == 0 || (peer.size() == 1 && peer.get(0).equals(c.getAddress()))) {
-                    out.writeUTF("No peers");
-                    c.send(41, bufferOut);
-                    break;
-                }
-
-                String r = peer.stream()
-                    .collect(Collectors.joining(","));
-                out.writeUTF(r);
-                c.send(11, bufferOut);
-                break;
-            case 20:
-                str = buffer.readUTF();
-                if (!str.equals("LIST")) break;
-
-                Map<FileInfo, List<String>> updateList = trackerStatus.getUpdateList(c.getAddress());
-                String response = updateList.entrySet().stream()
-                    .map(entry -> {
-                        FileInfo fileInfo = entry.getKey();
-                        List<String> peers = entry.getValue();
-                        return String.format("%s*%d*%s^%s", fileInfo.getPath(), fileInfo.getChecksum(), fileInfo.getLastModified(), String.join("~", peers));
-                    })
-                    .collect(Collectors.joining(","));
-
-                out.writeUTF(response);
-                c.send(20, bufferOut);
-                break;
-            case 40:
-                str = buffer.readUTF();
-                if (!str.equals("Bye world!")) break;
-
-                trackerStatus.removeFiles(c.getAddress());
+                
+                c.send((byte) 20, bufferOut);
                 break;
         }
 

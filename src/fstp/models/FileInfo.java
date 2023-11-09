@@ -1,32 +1,28 @@
 package fstp.models;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
-public class FileInfo {
-    private String path;
-    private long checksum;
+public class FileInfo implements Comparable<FileInfo> {
+    private final String path;
     private Date lastModified;
+    private List<Long> chunks;
 
-    public FileInfo(String path, long checksum, Date lastModified) {
+    public FileInfo(String path, Date lastModified) {
         this.path = path;
-        this.checksum = checksum;
         this.lastModified = lastModified;
+        this.chunks = new ArrayList<>();
+    }
+
+    public FileInfo(String path, Date lastModified, List<Long> chunks) {
+        this.path = path;
+        this.lastModified = lastModified;
+        this.chunks = chunks;
     }
 
     public String getPath() {
         return this.path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    public long getChecksum() {
-        return this.checksum;
-    }
-
-    public void setChecksum(long checksum) {
-        this.checksum = checksum;
     }
 
     public Date getLastModified() {
@@ -35,6 +31,18 @@ public class FileInfo {
 
     public void setLastModified(Date lastModified) {
         this.lastModified = lastModified;
+    }
+
+    public List<Long> getChunks() {
+        return this.chunks;
+    }
+
+    public void setChunks(List<Long> chunks) {
+        this.chunks = chunks;
+    }
+
+    public int getChunksSize() {
+        return this.chunks.size();
     }
 
     /**
@@ -46,7 +54,11 @@ public class FileInfo {
      */
     @Override
     public String toString() {
-        return String.format("%s*%d*%s", this.path, this.checksum, this.lastModified.getTime());
+        return String.format("%s*%s", this.path, this.lastModified.getTime());
+    }
+
+    public String toStringExtended() {
+        return String.format("%s*%s*%s", this.path, this.lastModified.getTime(), this.chunks.toString());
     }
 
     /**
@@ -59,20 +71,30 @@ public class FileInfo {
      */
     public static FileInfo fromString(String str) {
         String[] arr = str.split("\\*");
-        return new FileInfo(arr[0], Long.parseLong(arr[1]), new Date(Long.parseLong(arr[2])));
+        return new FileInfo(arr[0], new Date(Long.parseLong(arr[1])));
+    }
+
+    @Override
+    public int compareTo(FileInfo o) {
+        return o.getLastModified().compareTo(this.lastModified);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof FileInfo) {
             FileInfo other = (FileInfo) obj;
-            return this.path.equals(other.path) && this.checksum == other.checksum
-                    && this.lastModified.equals(other.lastModified);
+            boolean sameChuncks = true;
+            if (this.chunks.size() != other.chunks.size())
+                return false;
+
+            for (int i = 0; i < this.chunks.size(); i++)
+                if (!this.chunks.get(i).equals(other.chunks.get(i))) {
+                    sameChuncks = false;
+                    break;
+                }
+
+            return this.path.equals(other.path) && this.lastModified.equals(other.lastModified) && sameChuncks;
         }
         return false;
-    }
-
-    public boolean sameFile(FileInfo other) {
-        return this.path.equals(other.path);
     }
 }

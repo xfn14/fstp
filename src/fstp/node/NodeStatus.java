@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import fstp.Constants;
 import fstp.models.FileInfo;
 import fstp.utils.FileUtils;
 
@@ -17,13 +18,14 @@ public class NodeStatus {
     public NodeStatus(File dir) throws IOException {
         List<File> files = FileUtils.getFiles(dir);
         for (File file : files) {
-            String path = file.getPath().replace(dir.getPath(), "");
+            String path = file.getPath().replace(dir.getPath() + "/", "");
+            List<Long> chunks = FileUtils.getChunks(file, Constants.UDP_BUFFER_SIZE);            
             this.fileInfos.put(
                 path,
                 new FileInfo(
                     path,
-                    FileUtils.fileToChecksum(file),
-                    FileUtils.getFileData(file)
+                    FileUtils.getFileData(file),
+                    chunks
                 )
             );
         }

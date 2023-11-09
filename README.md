@@ -11,7 +11,7 @@ São então desenvolvidos dois protocolos: FS Track Protocol, para rastrear os a
 Tamanho do pacote: 4096
 
 - __1 byte__ - packet id
-- __2 bytes__ - espaço usado do pacote
+- __2 bytes__ - tamanho do payload
 - __[...]__ - payload
 
 ### FS Track Protocol (TCP)
@@ -22,10 +22,17 @@ Tamanho do pacote: 4096
 
 #### Tipos de mensagens
 
-##### Node
+##### Node 
 
-- 10 - Ping! (Update node files on tracker)
-    - Payload: <file1_path>*<file1_checksum>*<file1_lastModified>,<file2_path>*<file2_checksum>*<file2_lastModified>,...
+- 1 - Register File
+    - __2 + str len + str bytes__ - file_path*file_lastmodified (string)
+    - __4 bytes__ - number of chunks (int)
+    - __8 bytes__ - *per chunk* chunk id (long)
+
+Response:
+    - 10 - File registered
+    - 40 - Failed to register file
+
 - 11 - GET Request
     - Payload: <file1_name>,<file2_name>,...
 - 20 - Request list of files versions

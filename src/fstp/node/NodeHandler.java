@@ -5,16 +5,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import fstp.models.FileInfo;
+import fstp.models.Frame;
 import fstp.sockets.TCPConnection;
-import fstp.sockets.TCPConnection.Frame;
-import fstp.utils.Tuple;
 
 public class NodeHandler {
     private final TCPConnection connection;
@@ -27,89 +24,70 @@ public class NodeHandler {
         this.out = new DataOutputStream(this.buffer);
     }
 
-    public String ping(List<FileInfo> files) {
-        try {
-            StringBuilder sb = new StringBuilder();
-            if (files.size() > 0) {
-                for (FileInfo file : files)
-                    sb.append(file.toString()).append(",");
-                sb.deleteCharAt(sb.length() - 1);
-            }
+    public boolean registerFiles(List<FileInfo> fileInfos) {
+        boolean finalRes = true;
+        for (FileInfo fileInfo : fileInfos) {
+            int res = this.registerFile(fileInfo);
+            
+            if (res != 10) {
+                finalRes = false;
+                FSNode.logger.warning("Error registering file " + fileInfo.getPath());
+            } else FSNode.logger.info("File " + fileInfo.getPath() + " registered successfully.");
+        }
+        return finalRes;
+    }
 
-            this.out.writeUTF(sb.toString());
-            this.connection.send(10, this.buffer);
-            FSNode.logger.info("Sent ping to tracker...\nPayload: " + sb.toString() + "\n");
+    public int registerFile(FileInfo fileInfo) {
+        try {
+            List<Long> chunks = fileInfo.getChunks();
+            this.out.writeUTF(fileInfo.toString());
+            this.out.writeInt(chunks.size());
+
+            for (Long chunk : chunks)
+                this.out.writeLong(chunk);
+
+            this.connection.send(1, this.buffer);
 
             Frame response = this.connection.receive();
-            if (response.tag != 10) return "Error";
-            DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.data));
-            
-            return in.readUTF();
+            return response.getTag();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return "Error";
+        return 40;
     }
 
-    public Map<String, List<String>> list() {
-        try {
-            this.out.writeUTF("LIST");
-            this.connection.send(20, this.buffer);
-
-            Frame packet = this.connection.receive();
-            DataInputStream in = new DataInputStream(new ByteArrayInputStream(packet.data));
-            String response = in.readUTF();
-
-            if (response.equals("")) return new HashMap<>();
-            Map<String, List<String>> res = Arrays.stream(response.split(","))
-                .map(file -> file.split("\\^"))
-                .collect(Collectors.toMap(
-                    parts -> parts[0],
-                    parts -> Arrays.asList(parts[1].split("~"))
-                ));
-
-            return res;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return new HashMap<>();
-    }
-
-    /**
-     * GET <path_file1> <path_file2> ...
-     * 
-     * @param payload <path_file1>,<path_file2>,...
-     */
-    public Tuple<Integer, List<String>> get(String payload) {
-        List<String> peers = new ArrayList<>();
+    public Map<FileInfo, List<String>> getUpdateList() {
+        Map<FileInfo, List<String>> res = new HashMap<>();
         
         try {
-            this.out.writeUTF(payload);
-            this.connection.send(11, this.buffer);
+            this.connection.send(2, this.buffer);
 
-            Frame packet = this.connection.receive();
-            DataInputStream in = new DataInputStream(new ByteArrayInputStream(packet.data));
-            String response = in.readUTF();
-            
-            if (peers.contains(",")) 
-                peers = Arrays.asList(response.split(","));
-            else peers.add(response);
-            return new Tuple<>(packet.tag, peers);
+            Frame response = this.connection.receive();
+            if (response.getTag() == 21) return res;
+
+            DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.getData()));
+            int len = in.readInt();
+
+            for (int i = 0; i < len; i++) {
+                String str = in.readUTF();
+                int npeers = in.readInt();
+                if (npeers == 0) continue;
+
+                List<String> peers = new ArrayList<>();
+                for (int j = 0; j < npeers; j++) 
+                    peers.add(in.readUTF());
+
+                res.put(FileInfo.fromString(str), peers);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return new Tuple<>(41, peers);
+        return res;
     }
 
     public void exit() {
-        try {
-            this.out.writeUTF("Bye world!");
-            this.connection.send(40, this.buffer);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // TODO: Send exit message to tracker
     }
 }
