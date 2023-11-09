@@ -20,35 +20,28 @@ Tamanho do pacote: 4096
 - __4 bytes__ - tamanho do payload
 - __[...]__ - payload
 
-#### Tipos de mensagens
-
-##### Node 
+#### Payload
 
 - 1 - Register File
-    - __2 + str len + str bytes__ - file_path*file_lastmodified (string)
+    - __2 + str len + str bytes__ - file_path (string)
+    - __8 bytes__ - last modified (long)
     - __4 bytes__ - number of chunks (int)
-    - __8 bytes__ - *per chunk* chunk id (long)
+        - *per chunk*
+        - __8 bytes__ -  chunk id (long)
 
-Response:
-    - 10 - File registered
-    - 40 - Failed to register file
+- 2 - Get update list
 
-- 11 - GET Request
-    - Payload: <file1_name>,<file2_name>,...
-- 20 - Request list of files versions
-    - Payload: LIST
-- 40 - Close connection
-    - Payload: Bye world!
+- 10 - File registered (Response to code 1)
 
-##### Tracker
+- 20 - List of files and their peers to update
+    - __4 bytes__ - number of files to update (int)
+        - *per file to update*
+        - __2 + str len + str bytes__ - file_path_1 (string)
+        - __8 bytes__ - last modified (long)
+        - __4 bytes__ - number of peers (int)
+            - *per peer*
+            - __2 + str len + str bytes__ -  peer address (long)
 
-- 10 - Response to tracker ping.
-    - Payload: Pong!
-- 11 - GET Reponse OK
-    - Payload: <peer1_address>,<peer2_address>,...
-- 20 - Send list of files versions
-    - Payload: <file1_path>*<file1_checksum>*<file1_lastModified>^<peer1_address>~<peer2_address>~...,<file2_path>*<file2_checksum>*<file2_lastModified>^<peer2_address>~<peer3_address>~...,...
-- 40 - Close connection
-    - Payload: Goodbye.
-- 41 - GET Response Fail
-    - Payload: <file1_failed>,<file2_failed>,...
+- 21 - No files to update
+
+- 40 - Failed to register file (Response to code 1)
