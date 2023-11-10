@@ -33,21 +33,10 @@ public class Skeleton {
 
         switch (frame.getTag()) {
             case 0:
-                List<String> peers = new ArrayList<>();
-                for (Entry<String, List<FileInfo>> entry : this.trackerStatus.getFiles().entrySet()) {
-                    String peer = entry.getKey();
-                    List<FileInfo> files = entry.getValue();
+                List<String> peers = this.trackerStatus.getFiles().keySet().stream()
+                    .filter(peer -> !peer.equals(c.getDevString()))
+                    .collect(Collectors.toList());
 
-                    if (peer.equals(c.getDevString())) continue;
-
-                    for (FileInfo file : files) {
-                        if (file.getLastModified().after(new Date(System.currentTimeMillis() - 1000 * 60 * 60 * 24))) {
-                            peers.add(peer);
-                            break;
-                        }
-                    }
-                }
-                
                 out.writeInt(peers.size());
                 for (String peer : peers)
                     out.writeUTF(peer);
