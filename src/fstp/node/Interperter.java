@@ -2,13 +2,17 @@ package fstp.node;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import fstp.models.FileInfo;
 
 public class Interperter {
     private static final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
     
     private NodeHandler nodeHandler;
     private NodeStatus nodeStatus;
-    private boolean running = true;
 
     public Interperter(NodeHandler nodeHandler, NodeStatus nodeStatus) {
         this.nodeHandler = nodeHandler;
@@ -16,7 +20,14 @@ public class Interperter {
     }
 
     public void run() {
-        while (running) {
+        while (nodeStatus.getRunning()) {
+            List<String> peers = nodeHandler.ping();
+            if (peers.size() == 0)
+            FSNode.logger.info("No peers connected to Tracker.");
+            
+            nodeStatus.clearPeers();
+            nodeStatus.getPeers().addAll(peers);
+
             try {
                 System.out.print(">> ");
                 String command = stdin.readLine();
@@ -33,6 +44,7 @@ public class Interperter {
 
                         get(args[1]);
                         break;
+                    case "QUIT":
                     case "q":
                         exit();
                         break;
@@ -46,7 +58,46 @@ public class Interperter {
     }
 
     private String list() {
-        StringBuilder sb = new StringBuilder("TODO: List files");
+        Map<FileInfo, List<String>> updateList = this.nodeHandler.getUpdateList();
+        nodeStatus.setUpdateMap(updateList);
+        StringBuilder sb = new StringBuilder();
+        if (updateList.size() == 0) {
+            sb.append("Everything up-to-date.");
+            return sb.toString();
+        }
+
+        Map<FileInfo, List<String>> newFiles = new HashMap<>();
+        Map<FileInfo, List<String>> updateFiles = new HashMap<>();
+        
+        for (Map.Entry<FileInfo, List<String>> entry : updateList.entrySet()) {
+            FileInfo fileInfo = entry.getKey();
+            List<String> peers = entry.getValue();
+
+            if (this.nodeStatus.getFileInfos().containsKey(fileInfo.getPath()))
+                updateFiles.put(fileInfo, peers);
+            else newFiles.put(fileInfo, peers);
+        }
+
+        if (newFiles.size() > 0) {
+            sb.append("New files:\n");
+            for (Map.Entry<FileInfo, List<String>> entry : newFiles.entrySet()) {
+                FileInfo fileInfo = entry.getKey();
+                List<String> peers = entry.getValue();
+
+                sb.append("\t").append(fileInfo.getPath()).append(" - ").append(fileInfo.getLastModified()).append(" - ").append(peers.size()).append(" peers\n");
+            }
+        }
+
+        if (updateFiles.size() > 0) {
+            sb.append("Updated files:\n");
+            for (Map.Entry<FileInfo, List<String>> entry : updateFiles.entrySet()) {
+                FileInfo fileInfo = entry.getKey();
+                List<String> peers = entry.getValue();
+
+                sb.append("\t").append(fileInfo.getPath()).append(" - ").append(fileInfo.getLastModified()).append(" - ").append(peers.size()).append(" peers\n");
+            }
+        }
+
         return sb.toString();
     }
 
@@ -54,7 +105,7 @@ public class Interperter {
     }
 
     private void exit() {
-        nodeHandler.exit();
-        running = false;
+        this.nodeHandler.exit();
+        this.nodeStatus.setRunning(false);
     }
 }

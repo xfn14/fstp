@@ -22,6 +22,8 @@ Tamanho do pacote: 4096
 
 #### Payload
 
+- 0 - Ping
+
 - 1 - Register File
     - __2 + str len + str bytes__ - file_path (string)
     - __8 bytes__ - last modified (long)
@@ -31,7 +33,11 @@ Tamanho do pacote: 4096
 
 - 2 - Get update list
 
-- 10 - File registered (Response to code 1)
+- 10 - List of nodes connected (Response to code 0)
+
+- 11 - No nodes connected (Response to code 0)
+
+- 12 - File registered (Response to code 1)
 
 - 20 - List of files and their peers to update
     - __4 bytes__ - number of files to update (int)

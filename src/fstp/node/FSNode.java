@@ -66,22 +66,7 @@ public class FSNode {
                 }
 
                 Map<FileInfo, List<String>> response = nodeHandler.getUpdateList();
-                if (response.size() == 0) {
-                    logger.info("Everything up-to-date.");
-                    return;
-                } else {
-                    logger.info("Files to update:");
-                    for (Map.Entry<FileInfo, List<String>> entry : response.entrySet()) {
-                        logger.info(entry.getKey().getPath() + " -> " + entry.getValue().stream().collect(Collectors.joining(", ")));
-                    }
-                }
-
-                // nodeStatus.clearPeers();
-                // if (response.length() != 0) {
-                //     String[] peers = response.split(",");
-                //     for (String peer : peers)
-                //         nodeStatus.addPeer(peer);
-                // }
+                nodeStatus.setUpdateMap(response);
 
                 logger.info("FS Track Protocol connected to Tracker on " + ip + ":" + port);
                 

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,12 +26,32 @@ public class NodeHandler {
         this.out = new DataOutputStream(this.buffer);
     }
 
+    public List<String> ping() {
+        List<String> peers = new ArrayList<>();
+
+        try {
+            this.connection.send(0, this.buffer);
+
+            Frame response = this.connection.receive();
+            if (response.getTag() == 11) return peers;
+
+            DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.getData()));
+            int nPeers = in.readInt();
+            for (int i = 0; i < nPeers; i++) 
+                peers.add(in.readUTF());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return peers;
+    }
+
     public boolean registerFiles(List<FileInfo> fileInfos) {
         boolean finalRes = true;
         for (FileInfo fileInfo : fileInfos) {
             int res = this.registerFile(fileInfo);
             
-            if (res != 10) {
+            if (res != 11) {
                 finalRes = false;
                 FSNode.logger.warning("Error registering file " + fileInfo.getPath());
             } else FSNode.logger.info("File " + fileInfo.getPath() + " registered successfully.");
@@ -91,6 +112,5 @@ public class NodeHandler {
     }
 
     public void exit() {
-        // TODO: Send exit message to tracker
     }
 }

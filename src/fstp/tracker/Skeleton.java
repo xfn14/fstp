@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -31,6 +32,27 @@ public class Skeleton {
         DataOutputStream out = new DataOutputStream(bufferOut);
 
         switch (frame.getTag()) {
+            case 0:
+                List<String> peers = new ArrayList<>();
+                for (Entry<String, List<FileInfo>> entry : this.trackerStatus.getFiles().entrySet()) {
+                    String peer = entry.getKey();
+                    List<FileInfo> files = entry.getValue();
+
+                    if (peer.equals(c.getDevString())) continue;
+
+                    for (FileInfo file : files) {
+                        if (file.getLastModified().after(new Date(System.currentTimeMillis() - 1000 * 60 * 60 * 24))) {
+                            peers.add(peer);
+                            break;
+                        }
+                    }
+                }
+                
+                out.writeInt(peers.size());
+                for (String peer : peers)
+                    out.writeUTF(peer);
+                c.send((byte) 10, bufferOut);
+                break;
             case 1:
                 String path = buffer.readUTF();
                 long lastModified = buffer.readLong();
@@ -39,7 +61,7 @@ public class Skeleton {
 
                 if (nblocks == 0) {
                     trackerStatus.addFile(c.getDevString(), fileInfo);
-                    c.send((byte) 10, bufferOut);
+                    c.send((byte) 11, bufferOut);
                     break;
                 }
 
@@ -62,7 +84,7 @@ public class Skeleton {
                     
                 FSTracker.logger.info("Received file " + path + " - " + new Date(lastModified) + " from " + c.getDevString() + "\n");
 
-                c.send((byte) (!blocks.contains(-1L) ? 10 : 40), bufferOut);
+                c.send((byte) (!blocks.contains(-1L) ? 11 : 40), bufferOut);
                 break;
             case 2:
                 Map<FileInfo, List<String>> toUpdate = trackerStatus.getUpdateList(c.getDevString());
