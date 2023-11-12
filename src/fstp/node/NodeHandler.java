@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import fstp.models.FileDownload;
 import fstp.models.FileInfo;
 import fstp.models.Frame;
 import fstp.sockets.TCPConnection;
@@ -111,6 +112,44 @@ public class NodeHandler {
         return res;
     }
 
+    public FileDownload get(FileInfo updateFile, List<String> peers) {
+        FilePool filePool = new FilePool(updateFile.getPath(), peers);
+        if (filePool.getPeers().size() == 0) return null;
+
+        try {
+            this.out.writeUTF(updateFile.getPath());
+            this.out.writeLong(updateFile.getLastModified().getTime());
+            this.out.writeInt(peers.size());
+            
+            for (String peer : peers)
+                this.out.writeUTF(peer);
+            
+            this.connection.send(3, this.buffer);
+
+            Frame response = this.connection.receive();
+            if (response.getTag() == 41) return null;
+
+            DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.getData()));
+            int len = in.readInt();
+
+            List<Long> chucks = new ArrayList<>();
+            for (int i = 0; i < len; i++)
+                chucks.add(in.readLong());
+
+            updateFile.setChunks(chucks);
+
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        
+
+        FileDownload fileDownload = new FileDownload(updateFile.getPath(), updateFile.getLastModified());
+        return null;
+    }
+
     public void exit() {
+        // TODO: send exit message
     }
 }

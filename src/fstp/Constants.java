@@ -6,5 +6,5 @@ public class Constants {
     public static final boolean DEBUG_UPDATE_LIST = true;
 
     public static final int DEFAULT_PORT = 9090;
-    public static final int UDP_BUFFER_SIZE = 2048;
+    public static final int UDP_BUFFER_SIZE = 4096;
 }

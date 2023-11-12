@@ -1,22 +1,22 @@
 package fstp.models;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FileDownload extends FileInfo {
-    private final List<Long> gotten;
+    private final Map<Long, byte[]> gotten;
 
     public FileDownload(String path, Date lastModified) {
         super(path, lastModified);
-        this.gotten = new ArrayList<>();
+        this.gotten = new HashMap<>();
     }
 
-    public void addChunk(long block) {
-        this.gotten.add(block);
+    public void add(long block, byte[] data) {
+        this.gotten.put(block, data);
     }
 
     public boolean gotten(long block) {
-        return this.gotten.contains(block);
+        return this.gotten.containsKey(block);
     }
 }

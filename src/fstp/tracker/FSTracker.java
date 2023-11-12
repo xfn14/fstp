@@ -40,7 +40,7 @@ public class FSTracker {
         while (running) {
             TCPConnection connection = new TCPConnection(serverSocket.accept());
             logger.info("New connection from " + connection.getDevString());
-            trackerStatus.initNode(connection.getDevString());
+            this.trackerStatus.initNode(connection.getDevString());
             
             Runnable r = () -> {
                 try (connection) {
@@ -50,6 +50,8 @@ public class FSTracker {
                     logger.warning("Error handling connection. " + e.getMessage());
                     e.printStackTrace();
                 }
+                this.trackerStatus.removeNode(connection.getDevString());
+                logger.info("Connection from " + connection.getDevString() + " closed.");
             };
             
             new Thread(r).start();

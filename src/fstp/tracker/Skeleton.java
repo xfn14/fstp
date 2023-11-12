@@ -71,7 +71,7 @@ public class Skeleton {
                     trackerStatus.addFile(c.getDevString(), fileInfo);
                 }
                     
-                FSTracker.logger.info("Received file " + path + " - " + new Date(lastModified) + " from " + c.getDevString() + "\n");
+                FSTracker.logger.info("Received file " + path + " - " + new Date(lastModified) + " from " + c.getDevString());
 
                 c.send((byte) (!blocks.contains(-1L) ? 11 : 40), bufferOut);
                 break;

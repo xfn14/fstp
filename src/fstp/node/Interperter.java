@@ -6,7 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import fstp.models.FileDownload;
 import fstp.models.FileInfo;
+import fstp.utils.Tuple;
 
 public class Interperter {
     private static final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
@@ -21,20 +23,27 @@ public class Interperter {
 
     public void run() {
         while (nodeStatus.getRunning()) {
-            List<String> peers = nodeHandler.ping();
-            if (peers.size() == 0)
-            FSNode.logger.info("No peers connected to Tracker.");
-            
-            nodeStatus.clearPeers();
-            nodeStatus.getPeers().addAll(peers);
-
             try {
                 System.out.print(">> ");
                 String command = stdin.readLine();
                 String[] args = command.split(" ");
+
+                List<String> peers = nodeHandler.ping();
+                if (peers.size() != 0) {
+                    this.nodeStatus.clearPeers();
+                    this.nodeStatus.getPeers().addAll(peers);
+                } else FSNode.logger.info("No peers connected to Tracker.");
+                
+                this.nodeStatus.verifyUpdateList();
+
                 switch (args[0]) {
                     case "LIST":
-                        FSNode.logger.info("\n" + list());
+                        Map<FileInfo, List<String>> response = this.nodeHandler.getUpdateList();
+                        this.nodeStatus.setUpdateMap(response);
+
+                        String list = this.list();
+                        if (!list.contains("\n")) FSNode.logger.info(list);
+                        else FSNode.logger.info("\n" + list);
                         break;
                     case "GET":
                         if (args.length < 2) {
@@ -42,11 +51,17 @@ public class Interperter {
                             break;
                         }
 
-                        get(args[1]);
+                        Tuple<FileInfo, List<String>> updatFileInfo = this.nodeStatus.getUpdateFileInfo(args[1]);
+                        if (updatFileInfo == null) {
+                            FSNode.logger.warning("File " + args[1] + " can't be updated. Use LIST to check for available files to update.");
+                            break;
+                        }
+
+                        this.get(updatFileInfo.getX(), updatFileInfo.getY());
                         break;
                     case "QUIT":
                     case "q":
-                        exit();
+                        this.exit();
                         break;
                     default:
                         FSNode.logger.warning("Invalid command.");
@@ -89,7 +104,7 @@ public class Interperter {
         }
 
         if (updateFiles.size() > 0) {
-            sb.append("Updated files:\n");
+            sb.append("Files to update:\n");
             for (Map.Entry<FileInfo, List<String>> entry : updateFiles.entrySet()) {
                 FileInfo fileInfo = entry.getKey();
                 List<String> peers = entry.getValue();
@@ -101,7 +116,15 @@ public class Interperter {
         return sb.toString();
     }
 
-    private void get(String file) {
+    private void get(FileInfo updateFile, List<String> peers) {
+        FileDownload res = this.nodeHandler.get(updateFile, peers);
+        if (res == null) {
+            FSNode.logger.warning("Error getting file " + updateFile.getPath());
+            return;
+        }
+
+        this.nodeStatus.saveFile(res);
+        FSNode.logger.info("File " + updateFile.getPath() + " updated successfully.");
     }
 
     private void exit() {

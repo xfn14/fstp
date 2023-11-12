@@ -13,10 +13,12 @@ import fstp.models.FileInfo;
 import fstp.utils.Tuple;
 
 public class TrackerStatus {
-    private Map<String, List<FileInfo>> files;
+    private final Map<String, List<FileInfo>> files;
+    private final Map<FileInfo, Tuple<List<String>, List<String>>> downloadPool;
 
     public TrackerStatus() {
         this.files = new HashMap<>();
+        this.downloadPool = new HashMap<>();
     }
 
     public FileInfo getMostRecentFile(String path, Date date) {
@@ -53,7 +55,6 @@ public class TrackerStatus {
         if (this.files.size() == 0) return updateList;
 
         for (Entry<String, List<FileInfo>> entry : this.files.entrySet()) {
-            System.out.println(entry.getKey() + ": " + entry.getValue().stream().map(FileInfo::getPath).collect(Collectors.joining(", ")));
             String peerAddr = entry.getKey();
             if (peerAddr.equals(addr)) continue;
 
@@ -116,5 +117,23 @@ public class TrackerStatus {
 
     public void initNode(String devString) {
         this.files.put(devString, new ArrayList<>());
+    }
+
+    public void removeNode(String devString) {
+        if (this.files.containsKey(devString))
+            this.files.remove(devString);
+
+        Map<FileInfo, Tuple<List<String>, List<String>>> newDowloadPool = new HashMap<>();
+        for (Entry<FileInfo, Tuple<List<String>, List<String>>> entry : this.downloadPool.entrySet()) {
+            Tuple<List<String>, List<String>> tuple = entry.getValue();
+            tuple.getX().remove(devString);
+            tuple.getY().remove(devString);
+
+            if (tuple.getX().size() > 0 && tuple.getY().size() > 0)
+                newDowloadPool.put(entry.getKey(), tuple);
+        }
+
+        this.downloadPool.clear();
+        this.downloadPool.putAll(newDowloadPool);
     }
 }

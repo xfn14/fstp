@@ -1,5 +1,6 @@
 package fstp.sockets;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -24,8 +25,18 @@ public class UDPConnection implements AutoCloseable {
         this.socket = new DatagramSocket(port, InetAddress.getByName(host));
     }
 
+    public void send(ByteArrayOutputStream byteArray) throws IOException {
+        this.send(byteArray.toByteArray());
+        byteArray.reset();
+    }
+
     public void send(byte[] data) throws IOException {
         DatagramPacket packet = new DatagramPacket(data, data.length);
+        this.socket.send(packet);
+    }
+    
+    public void send(byte[] data, String addr, int port) throws IOException {
+        DatagramPacket packet = new DatagramPacket(data, data.length, InetAddress.getByName(addr), port);
         this.socket.send(packet);
     }
 
@@ -39,5 +50,9 @@ public class UDPConnection implements AutoCloseable {
     @Override
     public void close() throws Exception {
         this.socket.close();
+    }
+
+    public String getDevString() {
+        return this.socket.getLocalAddress().getHostAddress() + ":" + this.socket.getLocalPort();
     }
 }
