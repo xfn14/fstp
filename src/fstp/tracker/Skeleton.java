@@ -40,7 +40,7 @@ public class Skeleton {
                 out.writeInt(peers.size());
                 for (String peer : peers)
                     out.writeUTF(peer);
-                c.send((byte) 10, bufferOut);
+                c.send(10, bufferOut);
                 break;
             case 1:
                 String path = buffer.readUTF();

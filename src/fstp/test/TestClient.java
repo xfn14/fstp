@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 
+import fstp.Constants;
 import fstp.sockets.UDPConnection;
 
 public class TestClient {
@@ -22,7 +23,14 @@ public class TestClient {
             while (true) {
                 try {
                     out.writeInt(1);
-                    out.writeUTF("Hello World");
+                    out.writeUTF("Goooooods");
+                    byte[] bytes = new byte[Constants.UDP_BUFFER_SIZE - buffer.size()];
+                    for (int i = 0; i < bytes.length; i++) bytes[i] = (byte) i;
+                    System.out.println("--------------------");
+                    for (int i = 0; i < bytes.length; i++)
+                        System.out.print(bytes[i] + " ");
+                    System.out.println("--------------------");
+                    out.write(bytes);
                     udpConnection.send(buffer.toByteArray(), "localhost", 4455);
                     buffer.reset();
                     

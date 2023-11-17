@@ -15,7 +15,7 @@ import fstp.utils.Tuple;
 public class TrackerStatus {
     private final Map<String, List<FileInfo>> files;
     private final Map<FileInfo, Tuple<List<String>, List<String>>> downloadPool;
-
+    
     public TrackerStatus() {
         this.files = new HashMap<>();
         this.downloadPool = new HashMap<>();

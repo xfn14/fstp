@@ -84,7 +84,7 @@ Tamanho do pacote: 4096
 
 - Packet pequenos fazem com que a retransmissão no que toda a perdas seja mais eficaz.
 - Através do uso de checksums para os ids das chunks conseguimos, mesmo usando UDP, ter a certeza que a informação não é alterada durante a transmissão.
-- O tracker nao tem de guardar os ficheiros por inteiro para saber as suas .
+- O tracker nao tem de guardar os ficheiros por inteiro para saber verificar as suas chunks.
 - O cliente pode ter multiplos peers ao mesmo tempo a mandar o ficheiro e ao mesmo tempo enviar as partes que já fez download para outros clientes que também precisem do mesmo ficheiro.
 
 ### Contras
@@ -92,3 +92,4 @@ Tamanho do pacote: 4096
 - Packets UDP que nao vao completos porque o ficheiro não tem mais que Constant.UDP_BUFFER_SIZE ou a ultima chunk de um ficheiro tem bytes nao usados.
 - Packet pequenos faz com que sejam usados mais bytes em headers na transferencia de ficheiros maiores.
 - Não ser possível fazer download de vários ficheiros ao mesmo tempo
+- Ficheiro de tamanho maximo de 2Gb
