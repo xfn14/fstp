@@ -14,7 +14,7 @@ import fstp.utils.Tuple;
 
 public class TrackerStatus {
     private final Map<String, List<FileInfo>> files;
-    private final Map<FileInfo, Tuple<List<String>, List<String>>> downloadPool;
+    private final Map<FileInfo, Map<String, List<Long>>> downloadPool;
     
     public TrackerStatus() {
         this.files = new HashMap<>();
@@ -119,18 +119,17 @@ public class TrackerStatus {
         this.files.put(devString, new ArrayList<>());
     }
 
-    public void removeNode(String devString) {
-        if (this.files.containsKey(devString))
-            this.files.remove(devString);
+    public void removeNode(String node) {
+        if (this.files.containsKey(node))
+            this.files.remove(node);
 
-        Map<FileInfo, Tuple<List<String>, List<String>>> newDowloadPool = new HashMap<>();
-        for (Entry<FileInfo, Tuple<List<String>, List<String>>> entry : this.downloadPool.entrySet()) {
-            Tuple<List<String>, List<String>> tuple = entry.getValue();
-            tuple.getX().remove(devString);
-            tuple.getY().remove(devString);
+        Map<FileInfo, Map<String, List<Long>>> newDowloadPool = new HashMap<>();
+        for (Entry<FileInfo, Map<String, List<Long>>> entry : this.downloadPool.entrySet()) {
+            Map<String, List<Long>> map = entry.getValue();
+            map.remove(node);
 
-            if (tuple.getX().size() > 0 && tuple.getY().size() > 0)
-                newDowloadPool.put(entry.getKey(), tuple);
+            if (map.size() > 0)
+                newDowloadPool.put(entry.getKey(), map);
         }
 
         this.downloadPool.clear();

@@ -12,31 +12,40 @@ import fstp.Constants;
 
 public class UDPConnection implements AutoCloseable {
     private final DatagramSocket socket;
+    private final int port;
 
     public UDPConnection(DatagramSocket socket) {
+        this.port = socket.getPort();
         this.socket = socket;
     }
 
     public UDPConnection(String host) throws SocketException, UnknownHostException {
+        this.port = Constants.DEFAULT_PORT;
         this.socket = new DatagramSocket(Constants.DEFAULT_PORT, InetAddress.getByName(host));
     }
 
-    public UDPConnection(String host, int port) throws SocketException, UnknownHostException {
-        this.socket = new DatagramSocket(port, InetAddress.getByName(host));
+    public UDPConnection(int port) throws SocketException, UnknownHostException {
+        this.port = port;
+        this.socket = new DatagramSocket(port);
     }
 
-    public void send(ByteArrayOutputStream byteArray) throws IOException {
-        this.send(byteArray.toByteArray());
+    public void send(ByteArrayOutputStream byteArray, String addr, int port) throws IOException {
+        this.send(byteArray.toByteArray(), addr, port);
         byteArray.reset();
-    }
-
-    public void send(byte[] data) throws IOException {
-        DatagramPacket packet = new DatagramPacket(data, data.length);
-        this.socket.send(packet);
     }
     
     public void send(byte[] data, String addr, int port) throws IOException {
-        DatagramPacket packet = new DatagramPacket(data, data.length, InetAddress.getByName(addr), port);
+        DatagramPacket packet = new DatagramPacket(data, Constants.UDP_BUFFER_SIZE, InetAddress.getByName(addr), port);
+        this.socket.send(packet);
+    }
+
+    public void send(ByteArrayOutputStream byteArray, String addr) throws IOException {
+        this.send(byteArray.toByteArray(), addr, Constants.DEFAULT_PORT);
+        byteArray.reset();
+    }
+    
+    public void send(byte[] data, String addr) throws IOException {
+        DatagramPacket packet = new DatagramPacket(data, Constants.UDP_BUFFER_SIZE, InetAddress.getByName(addr), Constants.DEFAULT_PORT);
         this.socket.send(packet);
     }
 
@@ -54,5 +63,9 @@ public class UDPConnection implements AutoCloseable {
 
     public String getDevString() {
         return this.socket.getLocalAddress().getHostAddress() + ":" + this.socket.getLocalPort();
+    }
+
+    public int getPort() {
+        return this.port;
     }
 }

@@ -15,6 +15,7 @@ import fstp.Constants;
 import fstp.handlers.LoggerHandler;
 import fstp.models.FileInfo;
 import fstp.sockets.TCPConnection;
+import fstp.sockets.UDPConnection;
 
 public class FSNode {
     public static Logger logger = Logger.getLogger("FS-Node");
@@ -82,11 +83,11 @@ public class FSNode {
         };
 
         Runnable udpRunnable = () -> {
-            try {
-                DatagramSocket socket = new DatagramSocket();
+            try (UDPConnection udpConnection = new UDPConnection(port)) {
                 logger.info("FS Transfer Protocol listening using UDP on " + port);
-                
             } catch (SocketException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         };

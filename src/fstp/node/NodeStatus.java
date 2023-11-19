@@ -27,7 +27,7 @@ public class NodeStatus {
         List<File> files = FileUtils.getFiles(dir);
         for (File file : files) {
             String path = file.getPath().replace(dir.getPath() + "/", "");
-            List<Long> chunks = FileUtils.getChunks(file, Constants.UDP_BUFFER_SIZE);            
+            List<Long> chunks = FileUtils.getChunks(file, Constants.UDP_BUFFER_SIZE - 12);            
             this.fileInfos.put(
                 path,
                 new FileInfo(
