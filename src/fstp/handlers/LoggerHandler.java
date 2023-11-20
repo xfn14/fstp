@@ -35,7 +35,7 @@ public class LoggerHandler {
             
             if (file) {
                 SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy-HH-mm-ss");
-                FileHandler fileHandler = new FileHandler(dateFormatter.format(new Date()) + ".log");
+                FileHandler fileHandler = new FileHandler("logs/" + dateFormatter.format(new Date()) + ".log");
                 fileHandler.setFormatter(formatter);
                 logger.addHandler(fileHandler);
             }

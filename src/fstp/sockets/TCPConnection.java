@@ -1,4 +1,5 @@
 package fstp.sockets;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -11,7 +12,7 @@ import java.net.Socket;
 import fstp.Constants;
 import fstp.models.Frame;
 
-public class TCPConnection implements AutoCloseable {
+public class TCPConnection {
     private final Socket socket;
 
     private final DataOutputStream out;
@@ -64,7 +65,6 @@ public class TCPConnection implements AutoCloseable {
         return new Frame(tag, data);
     }
 
-    @Override
     public void close() throws IOException {
         this.socket.close();
     }

@@ -8,21 +8,22 @@ import java.util.Map;
 
 import fstp.models.FileDownload;
 import fstp.models.FileInfo;
+import fstp.node.handlers.TCPHandler;
 import fstp.utils.Tuple;
 
 public class Interperter {
     private static final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
     
-    private NodeHandler nodeHandler;
+    private TCPHandler nodeHandler;
     private NodeStatus nodeStatus;
 
-    public Interperter(NodeHandler nodeHandler, NodeStatus nodeStatus) {
+    public Interperter(TCPHandler nodeHandler, NodeStatus nodeStatus) {
         this.nodeHandler = nodeHandler;
         this.nodeStatus = nodeStatus;
     }
 
     public void run() {
-        while (nodeStatus.getRunning()) {
+        while (this.nodeStatus.isRunning()) {
             try {
                 System.out.print(">> ");
                 String command = stdin.readLine();
@@ -32,20 +33,25 @@ public class Interperter {
                 if (peers.size() != 0) {
                     this.nodeStatus.clearPeers();
                     this.nodeStatus.getPeers().addAll(peers);
-                } else FSNode.logger.info("No peers connected to Tracker.");
+                }
                 
                 this.nodeStatus.verifyUpdateList();
 
-                switch (args[0]) {
-                    case "LIST":
+                switch (args[0].toLowerCase()) {
+                    case "l":
+                    case "list":
                         Map<FileInfo, List<String>> response = this.nodeHandler.getUpdateList();
                         this.nodeStatus.setUpdateMap(response);
+
+                        if (peers.size() == 0)
+                            FSNode.logger.info("No peers connected to Tracker.");
 
                         String list = this.list();
                         if (!list.contains("\n")) FSNode.logger.info(list);
                         else FSNode.logger.info("\n" + list);
                         break;
-                    case "GET":
+                    case "g":
+                    case "get":
                         if (args.length < 2) {
                             FSNode.logger.warning("Invalid usage. Usage: GET <file_path>");
                             break;
@@ -59,8 +65,8 @@ public class Interperter {
 
                         this.get(updatFileInfo.getX(), updatFileInfo.getY());
                         break;
-                    case "QUIT":
                     case "q":
+                    case "quit":
                         this.exit();
                         break;
                     default:

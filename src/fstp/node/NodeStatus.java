@@ -16,6 +16,7 @@ import fstp.utils.Tuple;
 public class NodeStatus {
     private final File dir;
     private boolean running;
+    private FileDownload downloading;
     private final List<String> peers = new ArrayList<>();
     private final Map<String, FileInfo> fileInfos = new HashMap<>();
     private Map<FileInfo, List<String>> updateMap = new HashMap<>();
@@ -23,6 +24,7 @@ public class NodeStatus {
     public NodeStatus(File dir) throws IOException {
         this.dir = dir;
         this.running = true;
+        this.downloading = null;
 
         List<File> files = FileUtils.getFiles(dir);
         for (File file : files) {
@@ -80,12 +82,20 @@ public class NodeStatus {
         this.updateMap = updateMap;
     }
 
-    public boolean getRunning() {
+    public boolean isRunning() {
         return this.running;
     }
 
     public void setRunning(boolean running) {
         this.running = running;
+    }
+
+    public FileDownload getDownloading() {
+        return this.downloading;
+    }
+
+    public void setDownloading(FileDownload downloading) {
+        this.downloading = downloading;
     }
 
     public List<String> getPeers() {

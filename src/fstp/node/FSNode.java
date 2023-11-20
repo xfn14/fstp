@@ -4,16 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.DatagramSocket;
 import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import fstp.Constants;
 import fstp.handlers.LoggerHandler;
-import fstp.models.FileInfo;
+import fstp.node.handlers.TCPHandler;
+import fstp.node.handlers.UDPHandler;
 import fstp.sockets.TCPConnection;
 import fstp.sockets.UDPConnection;
 
@@ -55,44 +52,34 @@ public class FSNode {
             return;
         }
 
-        Runnable tcpRunnable = () -> {
-            try (Socket socket = new Socket(ip, port)) {
-                TCPConnection tcpConnection = new TCPConnection(socket);
-                NodeHandler nodeHandler = new NodeHandler(tcpConnection);
+        try {
+            Socket socket = new Socket(ip, Constants.DEFAULT_PORT);
+            TCPConnection tcpConnection = new TCPConnection(socket);
+            try {
+                UDPConnection udpConnection = new UDPConnection(port);
+                TCPHandler tcpHandler = new TCPHandler(tcpConnection);
+                UDPHandler udpHandler = new UDPHandler(udpConnection);
 
-                boolean res = nodeHandler.registerFiles(nodeStatus.getFileInfos().values().stream().collect(Collectors.toList()));
-                if (!res) {
-                    logger.severe("Error registering some files to Tracker.");
-                    return;
-                }
+                NodeHandler nodeHandler = new NodeHandler(
+                    nodeStatus,
+                    tcpHandler,
+                    udpHandler
+                );
 
-                Map<FileInfo, List<String>> response = nodeHandler.getUpdateList();
-                nodeStatus.setUpdateMap(response);
+                Runnable tcpRunnable = nodeHandler.initTCP();
+                Runnable udpRunnable = nodeHandler.initUDP();
 
-                logger.info("FS Track Protocol connected to Tracker on " + ip + ":" + port);
-                
-                Interperter interperter = new Interperter(nodeHandler, nodeStatus);
-                interperter.run();
-
-                tcpConnection.close();
-            } catch (UnknownHostException e) {
-                logger.severe(ip + " is not a valid IP address.");
-            } catch (IOException e) {
-                logger.severe("Error connecting to " + ip + " on port " + port + ". Is the Tracker running?");
-            }
-        };
-
-        Runnable udpRunnable = () -> {
-            try (UDPConnection udpConnection = new UDPConnection(port)) {
-                logger.info("FS Transfer Protocol listening using UDP on " + port);
+                new Thread(tcpRunnable).start();
+                new Thread(udpRunnable).start();
             } catch (SocketException e) {
-                e.printStackTrace();
+                logger.severe("Error binding UDP socket to port " + port + ".");
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.severe("Error creating UDP socket.");
             }
-        };
-
-        udpRunnable.run();
-        tcpRunnable.run();
+        } catch (UnknownHostException e) {
+            logger.severe(ip + " is not a valid IP address.");
+        } catch (IOException e) {
+            logger.severe("Error connecting to " + ip + " on port " + port + ". Is the Tracker running?");
+        }
     }
 }

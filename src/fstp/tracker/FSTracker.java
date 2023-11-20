@@ -20,7 +20,7 @@ public class FSTracker {
     }
 
     public static void main(String[] args) {
-        LoggerHandler.loadLoggerSettings(logger, false);
+        LoggerHandler.loadLoggerSettings(logger, true);
 
         FSTracker fsTracker = new FSTracker();
         try {
@@ -43,13 +43,14 @@ public class FSTracker {
             this.trackerStatus.initNode(connection.getDevString());
             
             Runnable r = () -> {
-                try (connection) {
+                try {
                     for (; ; ) sk.handle(connection);
                 } catch (EOFException ignored){
                 } catch (Exception e){
                     logger.warning("Error handling connection. " + e.getMessage());
                     e.printStackTrace();
                 }
+
                 this.trackerStatus.removeNode(connection.getDevString());
                 logger.info("Connection from " + connection.getDevString() + " closed.");
             };

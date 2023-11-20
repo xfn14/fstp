@@ -10,7 +10,7 @@ import java.net.UnknownHostException;
 
 import fstp.Constants;
 
-public class UDPConnection implements AutoCloseable {
+public class UDPConnection {
     private final DatagramSocket socket;
     private final int port;
 
@@ -56,7 +56,6 @@ public class UDPConnection implements AutoCloseable {
         return packet.getData();
     }
 
-    @Override
     public void close() throws Exception {
         this.socket.close();
     }
