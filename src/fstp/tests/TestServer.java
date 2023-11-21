@@ -1,4 +1,4 @@
-package fstp.test;
+package fstp.tests;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -6,21 +6,22 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.Date;
 
-import fstp.Constants;
 import fstp.sockets.UDPConnection;
+import fstp.utils.Tuple;
 
-public class Test {
+public class TestServer {
     public static void main(String[] args) {
         try {
             Date date = new Date();
             UDPConnection udpConnection = new UDPConnection(new DatagramSocket(4455));
             while (true) {
                 try {
-                    byte[] data = udpConnection.receive();
-                    ByteArrayInputStream buffer = new ByteArrayInputStream(data);
+                    Tuple<InetAddress, byte[]> data = udpConnection.receive();
+                    ByteArrayInputStream buffer = new ByteArrayInputStream(data.getY());
                     DataInputStream in = new DataInputStream(buffer);
 
                     ByteArrayOutputStream buffer2 = new ByteArrayOutputStream();

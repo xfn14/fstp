@@ -11,11 +11,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import fstp.models.FileDownload;
 import fstp.models.FileInfo;
 import fstp.models.Frame;
 import fstp.node.FSNode;
-import fstp.node.FilePool;
 import fstp.sockets.TCPConnection;
 
 public class TCPHandler {
@@ -90,7 +88,7 @@ public class TCPHandler {
             this.connection.send(2, this.buffer);
 
             Frame response = this.connection.receive();
-            if (response.getTag() == 21) return res;
+            if (response.getTag() == 41) return res;
 
             DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.getData()));
             int len = in.readInt();
@@ -114,41 +112,56 @@ public class TCPHandler {
         return res;
     }
 
-    public FileDownload get(FileInfo updateFile, List<String> peers) {
-        // FilePool filePool = new FilePool(updateFile.getPath(), peers);
-        // if (filePool.getPeers().size() == 0) return null;
+    public List<Long> getFileChunks(String path) {
+        List<Long> res = new ArrayList<>();
 
-        // try {
-        //     this.out.writeUTF(updateFile.getPath());
-        //     this.out.writeLong(updateFile.getLastModified().getTime());
-        //     this.out.writeInt(peers.size());
-            
-        //     for (String peer : peers)
-        //         this.out.writeUTF(peer);
-            
-        //     this.connection.send(3, this.buffer);
+        try {
+            this.out.writeUTF(path);
+            this.connection.send(3, this.buffer);
 
-        //     Frame response = this.connection.receive();
-        //     if (response.getTag() == 41) return null;
+            Frame response = this.connection.receive();
+            if (response.getTag() == 42) return res;
 
-        //     DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.getData()));
-        //     int len = in.readInt();
+            DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.getData()));
+            int len = in.readInt();
 
-        //     List<Long> chucks = new ArrayList<>();
-        //     for (int i = 0; i < len; i++)
-        //         chucks.add(in.readLong());
+            for (int i = 0; i < len; i++)
+                res.add(in.readLong());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        //     updateFile.setChunks(chucks);
+        return res;
+    }
 
-            
-        // } catch (IOException e) {
-        //     e.printStackTrace();
-        //     return null;
-        // }
-        
+    public Map<String, List<Long>> listPeersDownloadingFile(String file) {
+        Map<String, List<Long>> res = new HashMap<>();
 
-        // FileDownload fileDownload = new FileDownload(updateFile.getPath(), updateFile.getLastModified());
-        return null;
+        try {
+            this.out.writeUTF(file);
+            this.connection.send(4, this.buffer);
+
+            Frame response = this.connection.receive();
+            if (response.getTag() == 43) return res;
+
+            DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.getData()));
+            int len = in.readInt();
+
+            for (int i = 0; i < len; i++) {
+                String peer = in.readUTF();
+                int nChunks = in.readInt();
+
+                List<Long> chunks = new ArrayList<>();
+                for (int j = 0; j < nChunks; j++)
+                    chunks.add(in.readLong());
+
+                res.put(peer, chunks);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return res;
     }
 
     public void exit() {

@@ -19,12 +19,12 @@ Tamanho do pacote: 4096
     - __2 + str len + str bytes__ - file_path (string)
     - __8 bytes__ -  chunk id (long)
 
-- 10 - File chunk (Response to code 1)
+- 2 - Send file chunk (Response to code 1)
     - __8 bytes__ -  chunk id (long)
-    - __2 bytes__ - tamanho da data
     - __[tamanho da data]__ - data
 
 - 40 - Invalid chunk request (Response to code 1)
+    - __8 bytes__ -  chunk id (long)
 
 ### FS Track Protocol (TCP)
 
@@ -35,7 +35,6 @@ Tamanho do pacote: 4096
 #### Payload
 
 - 0 - Ping
-
 - 1 - Register File
     - __2 + str len + str bytes__ - file_path (string)
     - __8 bytes__ - last modified (long)
@@ -44,24 +43,16 @@ Tamanho do pacote: 4096
         - __8 bytes__ -  chunk id (long)
 
 - 2 - Get update list
-
-- 3 - Get file
+- 3 - Get file (When finished send code 1 to tracker)
     - __2 + str len + str bytes__ - file_path (string)
     - __8 bytes__ - last modified (long)
-    - __4 bytes__ - number of connected peers (int)
-        - *per peer connected*
-        - __2 + str len + str bytes__ -  peer ip (string)
+
+- 4 - Get list of peers downloading file and blocks already downloaded
+    - __2 + str len + str bytes__ - file_path (string)
 
 - 10 - List of nodes connected (Response to code 0)
-
 - 11 - No nodes connected (Response to code 0)
-
 - 12 - File registered (Response to code 1)
-
-- 13 - File blocks (Response to code 3)
-    - __4 bytes__ - number of chunks (int)
-        - *per chunk*
-        - __8 bytes__ -  chunk id (long)
 
 - 20 - List of files and their peers to update (Response to code 2)
     - __4 bytes__ - number of files to update (int)
@@ -72,11 +63,27 @@ Tamanho do pacote: 4096
             - *per peer*
             - __2 + str len + str bytes__ -  peer address (long)
 
-- 21 - No files to update (Response to code 2)
+- 21 - File blocks (Response to code 3)
+    - __4 bytes__ - number of chunks (int)
+        - *per chunk*
+        - __8 bytes__ -  chunk id (long)
+
+- 22 - List of peers downloading file and its chunks (Response to code 4)
+    - __4 bytes__ - number of peers (int)
+        - *per peer*
+        - __2 + str len + str bytes__ - peer address (string)
+        - __4 bytes__ - number of chunks downloaded (int)
+            - *per chunk*
+            - __8 bytes__ - chunk id (long)
+
+- 30 - Chunk received
+    - __2 + str len + str bytes__ - file path (string)
+    - __8 bytes__ - chunk id (long)
 
 - 40 - Failed to register file (Response to code 1)
-
-- 41 - Error starting file download (Response to code 3)
+- 41 - No files to update (Response to code 2)
+- 42 - File empty (Response to code 3)
+- 43 - No peers downloading file (Response to code 4)
 
 ## Implementação
 

@@ -97,4 +97,8 @@ public class FileInfo implements Comparable<FileInfo> {
         }
         return false;
     }
+
+    public int getChunkPos(long chunk) {
+        return this.chunks.indexOf(chunk);
+    }
 }

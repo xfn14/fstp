@@ -9,6 +9,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 
 import fstp.Constants;
+import fstp.utils.Tuple;
 
 public class UDPConnection {
     private final DatagramSocket socket;
@@ -39,21 +40,11 @@ public class UDPConnection {
         this.socket.send(packet);
     }
 
-    public void send(ByteArrayOutputStream byteArray, String addr) throws IOException {
-        this.send(byteArray.toByteArray(), addr, Constants.DEFAULT_PORT);
-        byteArray.reset();
-    }
-    
-    public void send(byte[] data, String addr) throws IOException {
-        DatagramPacket packet = new DatagramPacket(data, Constants.UDP_BUFFER_SIZE, InetAddress.getByName(addr), Constants.DEFAULT_PORT);
-        this.socket.send(packet);
-    }
-
-    public byte[] receive() throws IOException {
+    public Tuple<InetAddress, byte[]> receive() throws IOException {
         byte[] buffer = new byte[Constants.UDP_BUFFER_SIZE];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         this.socket.receive(packet);
-        return packet.getData();
+        return new Tuple<>(packet.getAddress(), packet.getData());
     }
 
     public void close() throws Exception {

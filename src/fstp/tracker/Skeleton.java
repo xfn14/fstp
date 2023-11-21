@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -41,6 +40,8 @@ public class Skeleton {
                 for (String peer : peers)
                     out.writeUTF(peer);
                 c.send(10, bufferOut);
+
+                FSTracker.logger.info("Sending ping response to " + c.getDevString() + " with " + peers.size() + " peers");
                 break;
             case 1:
                 String path = buffer.readUTF();
@@ -70,15 +71,19 @@ public class Skeleton {
                 if (!blocks.contains(-1L)) {
                     trackerStatus.addFile(c.getDevString(), fileInfo);
                 }
-                    
-                FSTracker.logger.info("Received file " + path + " - " + new Date(lastModified) + " from " + c.getDevString());
 
+                FSTracker.logger.info("Received file " + path + " - " + new Date(lastModified) + " from " + c.getDevString());
+                if (this.trackerStatus.isNodeDownloadingFile(path, c.getDevString())) {
+                    this.trackerStatus.removeDownloadProgress(path, c.getDevString());
+                    FSTracker.logger.info("File has been updated, removing download progress for " + c.getDevString());
+                }
+                
                 c.send((byte) (!blocks.contains(-1L) ? 11 : 40), bufferOut);
                 break;
             case 2:
                 Map<FileInfo, List<String>> toUpdate = trackerStatus.getUpdateList(c.getDevString());
-                if (toUpdate.size() == 0) {
-                    c.send((byte) 21, bufferOut);
+                if (toUpdate == null || toUpdate.size() == 0) {
+                    c.send((byte) 41, bufferOut);
                     break;
                 }
                 
@@ -90,8 +95,28 @@ public class Skeleton {
                     for (String addr : f.getValue())
                         out.writeUTF(addr);
                 }
-                
+
+                FSTracker.logger.info("Sending update list to " + c.getDevString() + " with " + toUpdate.size() + " files");
                 c.send((byte) 20, bufferOut);
+                break;
+            case 4:
+                String file = buffer.readUTF();
+                Map<String, List<Long>> progress = this.trackerStatus.getDownloadProgress(file);
+                if (progress == null || progress.size() == 0) {
+                    c.send((byte) 43, bufferOut);
+                    break;
+                }
+
+                out.writeInt(progress.size());
+                for (Entry<String, List<Long>> entry : progress.entrySet()) {
+                    out.writeUTF(entry.getKey());
+                    out.writeInt(entry.getValue().size());
+                    for (Long block : entry.getValue())
+                        out.writeLong(block);
+                }
+
+                FSTracker.logger.info("Sending download progress to " + c.getDevString() + " for file " + file);
+                c.send((byte) 22, bufferOut);
                 break;
         }
 

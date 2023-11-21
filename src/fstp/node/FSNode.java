@@ -57,20 +57,15 @@ public class FSNode {
             TCPConnection tcpConnection = new TCPConnection(socket);
             try {
                 UDPConnection udpConnection = new UDPConnection(port);
-                TCPHandler tcpHandler = new TCPHandler(tcpConnection);
-                UDPHandler udpHandler = new UDPHandler(udpConnection);
-
                 NodeHandler nodeHandler = new NodeHandler(
                     nodeStatus,
-                    tcpHandler,
-                    udpHandler
+                    new TCPHandler(tcpConnection),
+                    new UDPHandler(udpConnection)
                 );
 
-                Runnable tcpRunnable = nodeHandler.initTCP();
-                Runnable udpRunnable = nodeHandler.initUDP();
-
-                new Thread(tcpRunnable).start();
-                new Thread(udpRunnable).start();
+                new Thread(nodeHandler.initTCPListener()).start();
+                new Thread(nodeHandler.initUDPListener()).start();
+                new Thread(nodeHandler.initDownloadHandler()).start();
             } catch (SocketException e) {
                 logger.severe("Error binding UDP socket to port " + port + ".");
             } catch (Exception e) {

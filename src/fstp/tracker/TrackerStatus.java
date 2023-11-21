@@ -14,7 +14,7 @@ import fstp.utils.Tuple;
 
 public class TrackerStatus {
     private final Map<String, List<FileInfo>> files;
-    private final Map<FileInfo, Map<String, List<Long>>> downloadPool;
+    private final Map<String, Map<String, List<Long>>> downloadPool;
     
     public TrackerStatus() {
         this.files = new HashMap<>();
@@ -123,8 +123,8 @@ public class TrackerStatus {
         if (this.files.containsKey(node))
             this.files.remove(node);
 
-        Map<FileInfo, Map<String, List<Long>>> newDowloadPool = new HashMap<>();
-        for (Entry<FileInfo, Map<String, List<Long>>> entry : this.downloadPool.entrySet()) {
+        Map<String, Map<String, List<Long>>> newDowloadPool = new HashMap<>();
+        for (Entry<String, Map<String, List<Long>>> entry : this.downloadPool.entrySet()) {
             Map<String, List<Long>> map = entry.getValue();
             map.remove(node);
 
@@ -134,5 +134,19 @@ public class TrackerStatus {
 
         this.downloadPool.clear();
         this.downloadPool.putAll(newDowloadPool);
+    }
+
+    public Map<String, List<Long>> getDownloadProgress(String addr) {
+        return this.downloadPool.get(addr);
+    }
+
+    public boolean isNodeDownloadingFile(String path, String addr) {
+        if (!this.downloadPool.containsKey(path)) return false;
+        return this.downloadPool.get(path).containsKey(addr);
+    }
+
+    public void removeDownloadProgress(String path, String addr) {
+        if (!this.downloadPool.containsKey(path)) return;
+        this.downloadPool.get(path).remove(addr);
     }
 }

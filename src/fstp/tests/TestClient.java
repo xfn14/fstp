@@ -1,4 +1,4 @@
-package fstp.test;
+package fstp.tests;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -6,10 +6,12 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
 
 import fstp.Constants;
 import fstp.sockets.UDPConnection;
+import fstp.utils.Tuple;
 
 public class TestClient {
     public static void main(String[] args) {
@@ -22,8 +24,8 @@ public class TestClient {
 
             while (true) {
                 try {
-                    out.writeInt(1);
-                    out.writeUTF("Goooooods");
+                    out.writeByte(1);
+                    out.writeLong(523456837455304L);
                     byte[] bytes = new byte[Constants.UDP_BUFFER_SIZE - buffer.size()];
                     for (int i = 0; i < bytes.length; i++) bytes[i] = (byte) i;
                     System.out.println("--------------------");
@@ -34,8 +36,8 @@ public class TestClient {
                     udpConnection.send(buffer.toByteArray(), "localhost", 4455);
                     buffer.reset();
                     
-                    byte[] data = udpConnection.receive();
-                    ByteArrayInputStream buffer2 = new ByteArrayInputStream(data);
+                    Tuple<InetAddress, byte[]> data = udpConnection.receive();
+                    ByteArrayInputStream buffer2 = new ByteArrayInputStream(data.getY());
                     DataInputStream in = new DataInputStream(buffer2);
 
                     int tag = in.readInt();

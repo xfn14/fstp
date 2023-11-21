@@ -16,7 +16,7 @@ import fstp.utils.Tuple;
 public class NodeStatus {
     private final File dir;
     private boolean running;
-    private FileDownload downloading;
+    private FilePool downloading;
     private final List<String> peers = new ArrayList<>();
     private final Map<String, FileInfo> fileInfos = new HashMap<>();
     private Map<FileInfo, List<String>> updateMap = new HashMap<>();
@@ -29,7 +29,7 @@ public class NodeStatus {
         List<File> files = FileUtils.getFiles(dir);
         for (File file : files) {
             String path = file.getPath().replace(dir.getPath() + "/", "");
-            List<Long> chunks = FileUtils.getChunks(file, Constants.UDP_BUFFER_SIZE - 12);            
+            List<Long> chunks = FileUtils.getChunks(file, Constants.UDP_BUFFER_SIZE - 9);            
             this.fileInfos.put(
                 path,
                 new FileInfo(
@@ -87,14 +87,15 @@ public class NodeStatus {
     }
 
     public void setRunning(boolean running) {
+        this.downloading = null;
         this.running = running;
     }
 
-    public FileDownload getDownloading() {
+    public FilePool getDownloading() {
         return this.downloading;
     }
 
-    public void setDownloading(FileDownload downloading) {
+    public void setDownloading(FilePool downloading) {
         this.downloading = downloading;
     }
 
@@ -112,5 +113,17 @@ public class NodeStatus {
 
     public Map<String, FileInfo> getFileInfos() {
         return this.fileInfos;
+    }
+
+    public FileInfo getFileInfo(String path) {
+        return this.fileInfos.get(path);
+    }
+
+    public byte[] getChunkData(String path, int chunkPos) throws IOException {
+        File file = new File(this.dir.getPath() + "/" + path);
+        if (!file.exists() || !file.isFile())
+            return null;
+
+        return FileUtils.getChunk(file, chunkPos, Constants.UDP_BUFFER_SIZE - 9);
     }
 }

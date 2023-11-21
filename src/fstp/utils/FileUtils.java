@@ -24,6 +24,10 @@ public class FileUtils {
         return files;
     }
 
+    public static File getFile(File dir, String path) {
+        return new File(dir.getPath() + "/" + path);
+    }
+
     /**
      * Convert a file to a byte array
      * 
@@ -82,10 +86,37 @@ public class FileUtils {
         byte[] arr = fileToBytes(file);
         int numChunks = (int) Math.ceil(arr.length / (double) chunkSize);
         for (int i = 0; i < numChunks; i++) {
-            byte[] chunk = new byte[chunkSize];
-            System.arraycopy(arr, i * chunkSize, chunk, 0, Math.min(arr.length - i * chunkSize, chunkSize));
+            byte[] chunk = getChunk(arr, chunkSize, i);
             chunks.add(checksumByteArr(chunk));
         }
         return chunks;
+    }
+
+    /**
+     * Get a chunk of a file
+     * 
+     * @param file File to get chunk from
+     * @param chunkSize Size of each chunk
+     * @param idx Index of chunk
+     * @return Chunk of file
+     * @throws IOException If an I/O error occurs reading from the file or a malformed or unmappable byte sequence is read
+     */
+    public static byte[] getChunk(File file, int chunkSize, int idx) throws IOException {
+        return getChunk(fileToBytes(file), chunkSize, idx);
+    }
+
+    /**
+     * Get a chunk of a byte array
+     * 
+     * @param arr Byte array to get chunk from
+     * @param chunkSize Size of each chunk
+     * @param idx Index of chunk
+     * @return Chunk of byte array
+     * @throws IOException If an I/O error occurs reading from the file or a malformed or unmappable byte sequence is read
+     */
+    public static byte[] getChunk(byte[] arr, int chunkSize, int idx) throws IOException {
+        byte[] chunk = new byte[chunkSize];
+        System.arraycopy(arr, idx * chunkSize, chunk, 0, Math.min(arr.length - idx * chunkSize, chunkSize));
+        return chunk;
     }
 }

@@ -1,63 +1,54 @@
 package fstp.node;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import fstp.models.FileDownload;
-import fstp.sockets.UDPConnection;
 
 public class FilePool {
-    // private final String path;
-    // private final FileDownload fileDownload;
-    // private final Map<String, UDPConnection> peers = new HashMap<>();
+    private final List<String> peers;
+    private final FileDownload fileDownload;
+    private int iteration = 0;
 
-    // public FilePool(String path, List<String> peers) {
-    //     this.path = path;
-    //     this.fileDownload = null;
+    public FilePool(FileDownload fileDownload, List<String> peers) {
+        this.peers = peers;
+        this.fileDownload = fileDownload;
+    }
 
-    //     for (String peer : peers) {
-    //         String[] parts = peer.split(":");
-    //         try (UDPConnection connection = new UDPConnection(parts[0], Integer.parseInt(parts[1]))) {
-    //             this.peers.put(peer, connection);
-    //         } catch (Exception e) {
-    //             FSNode.logger.warning("Error connecting to peer " + peer);
-    //             e.printStackTrace();
-    //         }
-    //     }
-    // }
+    public long getNextChunkToRequest() {
+        List<Long> toRequest = this.getChunksToRequest();
+        if (toRequest.size() == 0) return -1L;
+        else if (toRequest.size() == 1) return toRequest.get(0);
 
-    // public void init() {
-    //     for (Map.Entry<String, UDPConnection> peer : peers.entrySet()) {
-    //         try (UDPConnection connection = peer.getValue()) {
-    //             connection.send(this.path.getBytes());
-    //             byte[] data = connection.receive();
-    //             System.out.println(new String(data));
-    //         } catch (Exception e) {
-    //             FSNode.logger.warning("Error connecting to peer " + peer.getKey());
-    //             e.printStackTrace();
-    //         }
-    //     }
-    // }
+        long chunkId = toRequest.get(this.iteration);
+        this.iteration = (this.iteration + 1) % toRequest.size();
+        return chunkId;
+    }
 
-    // public void download() {
-    //     for (Map.Entry<String, UDPConnection> peer : peers.entrySet()) {
-    //         try (UDPConnection connection = peer.getValue()) {
-    //             connection.send(this.path.getBytes());
-    //             byte[] data = connection.receive();
-    //             System.out.println(new String(data));
-    //         } catch (Exception e) {
-    //             FSNode.logger.warning("Error connecting to peer " + peer.getKey());
-    //             e.printStackTrace();
-    //         }
-    //     }
-    // }
+    public List<Long> getChunksToRequest() {
+        List<Long> toRequest = new ArrayList<>();
+        for (long i = 0; i < this.fileDownload.getChunksSize(); i++)
+            if (!this.fileDownload.gotten(i)) toRequest.add(i);
+        return toRequest;
+    }
 
-    // public String getPath() {
-    //     return this.path;
-    // }
+    public List<String> getPeers() {
+        return this.peers;
+    }
 
-    // public Map<String, UDPConnection> getPeers() {
-    //     return this.peers;
-    // }
+    public FileDownload getFileDownload() {
+        return this.fileDownload;
+    }
+
+    public boolean isComplete() {
+        return this.fileDownload.isComplete();
+    }
+
+    public String getPath() {
+        return this.fileDownload.getPath();
+    }
+
+    public void gotChunk(long chunkId, byte[] chunkData) {
+        this.fileDownload.add(chunkId, chunkData);
+    }
 }
