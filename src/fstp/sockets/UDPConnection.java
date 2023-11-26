@@ -38,7 +38,6 @@ public class UDPConnection {
     public void send(byte[] data, String addr, int port) throws IOException {
         byte[] buffer = new byte[Constants.UDP_BUFFER_SIZE];
         System.arraycopy(data, 0, buffer, 0, data.length);
-        System.out.println(data.length + " " + data + " " + addr + " " + port);
         DatagramPacket packet = new DatagramPacket(buffer, Constants.UDP_BUFFER_SIZE, InetAddress.getByName(addr), port);
         this.socket.send(packet);
     }
@@ -47,7 +46,6 @@ public class UDPConnection {
         byte[] buffer = new byte[Constants.UDP_BUFFER_SIZE];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         this.socket.receive(packet);
-        System.out.println(packet.getPort());
         return new Tuple<>(
             new Tuple<>(
                 packet.getAddress().getHostAddress(),

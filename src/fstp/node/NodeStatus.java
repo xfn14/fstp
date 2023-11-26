@@ -59,13 +59,13 @@ public class NodeStatus {
         try (FileOutputStream fos = new FileOutputStream(file)) {
             for (Long chunk : res.getChunks()) {
                 if (!res.gotten(chunk)) {
-                    System.out.println("Chunk " + chunk + " not gotten.");
+                    FSNode.logger.info("Chunk " + chunk + " not gotten.");
                     return null;
                 }
 
                 byte[] chunkData = res.get(chunk);
                 if (chunkData == null) {
-                    System.out.println("Chunk " + chunk + " not gotten.");
+                    FSNode.logger.info("Chunk " + chunk + " not gotten.");
                     return null;
                 }
 
