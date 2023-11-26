@@ -46,7 +46,8 @@ public class Skeleton {
             case 1:
                 String path = buffer.readUTF();
                 long lastModified = buffer.readLong();
-                FileInfo fileInfo = new FileInfo(path, new Date(lastModified));
+                short lastChunkSize = buffer.readShort();
+                FileInfo fileInfo = new FileInfo(path, new Date(lastModified), lastChunkSize);
                 int nblocks = buffer.readInt();
 
                 if (nblocks == 0) {
@@ -98,6 +99,26 @@ public class Skeleton {
 
                 FSTracker.logger.info("Sending update list to " + c.getDevString() + " with " + toUpdate.size() + " files");
                 c.send((byte) 20, bufferOut);
+                break;
+            case 3:
+                String fileDownload = buffer.readUTF();
+                FileInfo fileDownloadInfo = this.trackerStatus.getMostRecentFile(fileDownload);
+                
+                this.trackerStatus.initDownloadProgress(fileDownload, c.getDevString());
+
+                if (fileDownloadInfo == null || fileDownloadInfo.getChunks().size() == 0) {
+                    c.send((byte) 42, bufferOut);
+                    break;
+                }
+
+                List<Long> chunks = fileDownloadInfo.getChunks();
+                out.writeShort(fileDownloadInfo.getLastChunkSize());
+                out.writeInt(chunks.size());
+                for (Long chunk : chunks)
+                    out.writeLong(chunk);
+
+                FSTracker.logger.info("Sending file chunks of " + fileDownload + " to " + c.getDevString());
+                c.send((byte) 21, bufferOut);
                 break;
             case 4:
                 String file = buffer.readUTF();

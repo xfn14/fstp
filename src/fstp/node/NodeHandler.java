@@ -58,16 +58,14 @@ public class NodeHandler {
 
             while (this.nodeStatus.isRunning()) {
                 try {
-                    Tuple<InetAddress, byte[]> data = this.udpHandler.receive();
+                    Tuple<Tuple<String, Integer>, byte[]> data = this.udpHandler.receive();
                     if (data == null || data.getY() == null) {
                         FSNode.logger.severe("Error receiving data from UDP connection.");
                         continue;
                     }
 
                     DataInputStream in = new DataInputStream(new ByteArrayInputStream(data.getY()));
-                    String[] addr = data.getX().getHostAddress().split(":");
-                    String ip = addr[addr.length - 1];
-                    int port = Integer.parseInt(addr[0]);
+                    Tuple<String, Integer> addr = data.getX();
                     byte tag = in.readByte();
                     switch (tag) {
                         case 1:
@@ -76,18 +74,17 @@ public class NodeHandler {
 
                             FileInfo fileInfo = this.nodeStatus.getFileInfo(path);
                             if (fileInfo == null || !fileInfo.getChunks().contains(chunk)) {
-                                this.udpHandler.invalidChunk(chunk, ip, port);
+                                this.udpHandler.invalidChunk(chunk, addr.getX(), addr.getY());
                                 break;
                             }
                             
-                            int chunkPos = fileInfo.getChunkPos(chunk);
+                            int chunkPos = fileInfo.getChunkIndex(chunk);
                             try {
-                                // TODO: Validate chunk checksum?
                                 byte[] chunkData = this.nodeStatus.getChunkData(path, chunkPos);
-                                this.udpHandler.sendChunk(chunk, chunkData, ip, port);
-                                FSNode.logger.info("Sending chunk " + chunk + " to " + ip + ":" + port);
+                                this.udpHandler.sendChunk(chunk, chunkData, addr.getX(), addr.getY());
+                                FSNode.logger.info("Sending chunk " + chunk + " to " + addr.getX() + ":" + addr.getY());
                             } catch (Exception e) {
-                                this.udpHandler.invalidChunk(chunk, ip, port);
+                                this.udpHandler.invalidChunk(chunk, addr.getX(), addr.getY());
                                 FSNode.logger.warning("Error in local chunk in file system on " + path + " chunk " + chunk + ".");
                             }
                             break;
@@ -104,7 +101,7 @@ public class NodeHandler {
                             }
 
                             this.nodeStatus.addChunkToDownload(chunkId, chunkData);
-                            FSNode.logger.info("Received chunk " + chunkId + " from " + ip + ":" + port);
+                            FSNode.logger.info("Received chunk " + chunkId + " from " + addr.getX() + ":" + addr.getY());
                             break;
                         default:
                             break;
@@ -114,6 +111,7 @@ public class NodeHandler {
                     continue;
                 } catch (Exception e) {
                     FSNode.logger.severe("Error handling UDP connection.");
+                    e.printStackTrace();
                 }
             }
 
@@ -128,24 +126,31 @@ public class NodeHandler {
     public Runnable initDownloadHandler() {
         return () -> {
             while (this.nodeStatus.isRunning()) {
-                if (this.nodeStatus.getDownloading() != null) continue;
+                if (this.nodeStatus.getDownloading() == null) continue;
 
                 FilePool filePool = this.nodeStatus.getDownloading();
                 for (String peer : filePool.getPeers()) {
                     String[] addr = peer.split(":");
                     long chunkToRequest = filePool.getNextChunkToRequest();
                     if (chunkToRequest == -1L) {
-                        this.nodeStatus.saveFile(filePool.getFileDownload());
+                        FileInfo newFileInfo = this.nodeStatus.saveFile(filePool.getFileDownload());
+                        if (newFileInfo == null) {
+                            FSNode.logger.warning("Error saving file " + filePool.getPath());
+                            continue;
+                        }
+
+                        this.tcpHandler.registerFile(newFileInfo);
                         this.nodeStatus.setDownloading(null);
                         continue;
                     }
 
                     try {
-                        this.udpHandler.requestChunk(filePool.getPath(), chunkToRequest, addr[0], Integer.parseInt(addr[1]));
+                        this.udpHandler.requestChunk(filePool.getPath(), chunkToRequest, addr[0], 9092); // Integer.parseInt(addr[1])
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
+                filePool.nextIteration();
             }
         };
     }

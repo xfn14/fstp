@@ -20,16 +20,21 @@ public class FilePool {
         if (toRequest.size() == 0) return -1L;
         else if (toRequest.size() == 1) return toRequest.get(0);
 
-        long chunkId = toRequest.get(this.iteration);
-        this.iteration = (this.iteration + 1) % toRequest.size();
+        int pos = (this.iteration + 1) % toRequest.size();
+        long chunkId = toRequest.get(pos);
         return chunkId;
     }
 
     public List<Long> getChunksToRequest() {
         List<Long> toRequest = new ArrayList<>();
-        for (long i = 0; i < this.fileDownload.getChunksSize(); i++)
-            if (!this.fileDownload.gotten(i)) toRequest.add(i);
+        for (long chunkId : this.fileDownload.getChunks())
+            if (!this.fileDownload.gotten(chunkId))
+                toRequest.add(chunkId);
         return toRequest;
+    }
+
+    public void nextIteration() {
+        ++this.iteration;
     }
 
     public List<String> getPeers() {
@@ -50,5 +55,21 @@ public class FilePool {
 
     public void gotChunk(long chunkId, byte[] chunkData) {
         this.fileDownload.add(chunkId, chunkData);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("FilePool {\n");
+        sb.append("\tpeers: [");
+        for (String peer : this.peers) sb.append(peer + ", ");
+        sb.append("]\n");
+        sb.append("\tfileDownload: " + this.fileDownload + "\n");
+        sb.append("}");
+        return sb.toString();
+    }
+
+    public String getProgress() {
+        return this.fileDownload.getProgress();
     }
 }

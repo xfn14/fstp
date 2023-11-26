@@ -1,6 +1,7 @@
 package fstp.utils;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.Date;
@@ -8,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
+
+import fstp.node.FSNode;
 
 public class FileUtils {
     /**
@@ -73,6 +76,15 @@ public class FileUtils {
         return checksum.getValue();
     }
 
+    public static int getLastChunkSize(File file, int chunkSize) throws IOException {
+        byte[] arr = fileToBytes(file);
+        return getLastChunkSize(arr, chunkSize);
+    }
+
+    private static int getLastChunkSize(byte[] arr, int chunkSize) {
+        return arr.length % chunkSize;
+    }
+
     /**
      * Get the chunks ids of a file
      * 
@@ -118,5 +130,13 @@ public class FileUtils {
         byte[] chunk = new byte[chunkSize];
         System.arraycopy(arr, idx * chunkSize, chunk, 0, Math.min(arr.length - idx * chunkSize, chunkSize));
         return chunk;
+    }
+
+    public static void emptyFile(File file) throws IOException {
+        if (!file.exists())
+            file.createNewFile();
+
+        FileWriter fw = new FileWriter(file, false);
+        fw.close();
     }
 }

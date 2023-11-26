@@ -1,6 +1,8 @@
 package fstp.node;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,24 +28,64 @@ public class NodeStatus {
         this.running = true;
         this.downloading = null;
 
-        List<File> files = FileUtils.getFiles(dir);
-        for (File file : files) {
-            String path = file.getPath().replace(dir.getPath() + "/", "");
-            List<Long> chunks = FileUtils.getChunks(file, Constants.UDP_BUFFER_SIZE - 9);            
-            this.fileInfos.put(
-                path,
-                new FileInfo(
-                    path,
-                    FileUtils.getFileData(file),
-                    chunks
-                )
-            );
-        }
+        for (File file : FileUtils.getFiles(dir))
+            this.loadFile(file);
     }
 
-    public void saveFile(FileDownload res) {
-        String filePath = this.dir.getPath() + "/" + res.getPath();
-        // TODO save file to disk
+    public FileInfo loadFile(File file) throws IOException {
+        String path = file.getPath().replace(dir.getPath() + "/", "");
+        List<Long> chunks = FileUtils.getChunks(file, Constants.UDP_BUFFER_SIZE - 9);
+        
+        FileInfo fileInfo = new FileInfo(
+            path,
+            FileUtils.getFileData(file),
+            chunks,
+            (short) (file.length() % (Constants.UDP_BUFFER_SIZE - 9))
+        );
+
+        this.fileInfos.put(path, fileInfo);
+        return fileInfo;
+    }
+
+    public FileInfo saveFile(FileDownload res) {
+        File file = new File(this.dir.getPath() + "/" + res.getPath());
+        try {
+            FileUtils.emptyFile(file);
+        } catch (IOException e) {
+            FSNode.logger.severe("Error emptying file " + file.getPath());
+            e.printStackTrace();
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            for (Long chunk : res.getChunks()) {
+                if (!res.gotten(chunk)) {
+                    System.out.println("Chunk " + chunk + " not gotten.");
+                    return null;
+                }
+
+                byte[] chunkData = res.get(chunk);
+                if (chunkData == null) {
+                    System.out.println("Chunk " + chunk + " not gotten.");
+                    return null;
+                }
+
+                int chunkPos = res.getChunkIndex(chunk);
+                if (chunkPos == res.getChunks().size() - 1) {
+                    byte[] lastChunkData = new byte[res.getLastChunkSize()];
+                    System.arraycopy(chunkData, 0, lastChunkData, 0, res.getLastChunkSize());
+                    chunkData = lastChunkData;
+                }
+
+                for (byte b : chunkData)
+                    fos.write(b);
+            }
+
+            file.setLastModified(res.getLastModified().getTime());
+            return this.loadFile(file);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void verifyUpdateList() {
@@ -124,6 +166,12 @@ public class NodeStatus {
         if (!file.exists() || !file.isFile())
             return null;
 
-        return FileUtils.getChunk(file, chunkPos, Constants.UDP_BUFFER_SIZE - 9);
+        return FileUtils.getChunk(file, Constants.UDP_BUFFER_SIZE - 9, chunkPos);
+    }
+
+    public void addChunkToDownload(long chunkId, byte[] chunkData) {
+        if (this.downloading == null) return;
+
+        this.downloading.gotChunk(chunkId, chunkData);
     }
 }

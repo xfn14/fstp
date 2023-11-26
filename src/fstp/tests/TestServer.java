@@ -20,7 +20,7 @@ public class TestServer {
             UDPConnection udpConnection = new UDPConnection(new DatagramSocket(4455));
             while (true) {
                 try {
-                    Tuple<InetAddress, byte[]> data = udpConnection.receive();
+                    Tuple<Tuple<String, Integer>, byte[]> data = udpConnection.receive();
                     ByteArrayInputStream buffer = new ByteArrayInputStream(data.getY());
                     DataInputStream in = new DataInputStream(buffer);
 

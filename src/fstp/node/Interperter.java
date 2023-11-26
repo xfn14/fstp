@@ -3,6 +3,7 @@ package fstp.node;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import fstp.models.FileDownload;
 import fstp.models.FileInfo;
 import fstp.node.handlers.TCPHandler;
 import fstp.node.handlers.UDPHandler;
+import fstp.utils.FileUtils;
 import fstp.utils.Tuple;
 
 public class Interperter {
@@ -127,13 +129,20 @@ public class Interperter {
     }
 
     private void get(FileInfo updateFile, List<String> peers) {
-        List<Long> res = this.tcpHandler.getFileChunks(updateFile.getPath());
+        Tuple<Short, List<Long>> res = this.tcpHandler.getFileChunks(updateFile.getPath());
         if (res == null) {
             FSNode.logger.warning("Error getting file " + updateFile.getPath());
             return;
-        } else if (res.size() == 0) {
+        } else if (res.getY() == null || res.getY().size() == 0) {
             FSNode.logger.info("File " + updateFile.getPath() + " is empty.");
-            // TODO: Set file to empty with no chunks and update it
+            this.nodeStatus.saveFile(
+                new FileDownload(
+                    updateFile.getPath(),
+                    updateFile.getLastModified(),
+                    new ArrayList<>(),
+                    (short) 0
+                )
+            );
             return;
         }
 
@@ -141,7 +150,8 @@ public class Interperter {
             new FileDownload(
                 updateFile.getPath(),
                 updateFile.getLastModified(),
-                res
+                res.getY(),
+                res.getX()
             ),
             peers
         );
@@ -151,7 +161,7 @@ public class Interperter {
         FSNode.logger.info("Download started for file " + updateFile.getPath() + " from " + peers.size() + " peers.");
         while (this.nodeStatus.getDownloading() != null) {
             try {
-                // TODO: print progress to System.out
+                FSNode.logger.info("Download progress: " + this.nodeStatus.getDownloading().getProgress());
                 Thread.sleep(1000);
             } catch (Exception e) {
                 FSNode.logger.warning("Error sleeping thread.");

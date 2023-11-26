@@ -38,6 +38,7 @@ Tamanho do pacote: 4096
 - 1 - Register File
     - __2 + str len + str bytes__ - file_path (string)
     - __8 bytes__ - last modified (long)
+    - __2 bytes__ - number of used bytes on last chunk (short)
     - __4 bytes__ - number of chunks (int)
         - *per chunk*
         - __8 bytes__ -  chunk id (long)
@@ -64,6 +65,7 @@ Tamanho do pacote: 4096
             - __2 + str len + str bytes__ -  peer address (long)
 
 - 21 - File blocks (Response to code 3)
+    - __2 bytes__ - number of used bytes on last chunk (short)
     - __4 bytes__ - number of chunks (int)
         - *per chunk*
         - __8 bytes__ -  chunk id (long)

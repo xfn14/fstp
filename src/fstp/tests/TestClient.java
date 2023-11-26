@@ -6,7 +6,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
 
 import fstp.Constants;
@@ -36,7 +35,7 @@ public class TestClient {
                     udpConnection.send(buffer.toByteArray(), "localhost", 4455);
                     buffer.reset();
                     
-                    Tuple<InetAddress, byte[]> data = udpConnection.receive();
+                    Tuple<Tuple<String, Integer>, byte[]> data = udpConnection.receive();
                     ByteArrayInputStream buffer2 = new ByteArrayInputStream(data.getY());
                     DataInputStream in = new DataInputStream(buffer2);
 

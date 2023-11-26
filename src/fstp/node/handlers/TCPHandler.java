@@ -15,6 +15,7 @@ import fstp.models.FileInfo;
 import fstp.models.Frame;
 import fstp.node.FSNode;
 import fstp.sockets.TCPConnection;
+import fstp.utils.Tuple;
 
 public class TCPHandler {
     private final TCPConnection connection;
@@ -65,6 +66,7 @@ public class TCPHandler {
             List<Long> chunks = fileInfo.getChunks();
             this.out.writeUTF(fileInfo.getPath());
             this.out.writeLong(fileInfo.getLastModified().getTime());
+            this.out.writeShort(fileInfo.getLastChunkSize());
             this.out.writeInt(chunks.size());
 
             for (Long chunk : chunks)
@@ -112,7 +114,7 @@ public class TCPHandler {
         return res;
     }
 
-    public List<Long> getFileChunks(String path) {
+    public Tuple<Short, List<Long>> getFileChunks(String path) {
         List<Long> res = new ArrayList<>();
 
         try {
@@ -120,18 +122,21 @@ public class TCPHandler {
             this.connection.send(3, this.buffer);
 
             Frame response = this.connection.receive();
-            if (response.getTag() == 42) return res;
+            if (response.getTag() == 42) return new Tuple<>((short) -1, res);
 
             DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.getData()));
+            short lastChunkSize = in.readShort();
             int len = in.readInt();
 
             for (int i = 0; i < len; i++)
                 res.add(in.readLong());
+            
+            return new Tuple<>(lastChunkSize, res);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return res;
+        return null;
     }
 
     public Map<String, List<Long>> listPeersDownloadingFile(String file) {

@@ -8,6 +8,7 @@ public class FileInfo implements Comparable<FileInfo> {
     private final String path;
     private Date lastModified;
     private List<Long> chunks;
+    private int lastChunkSize;
 
     public FileInfo(String path, Date lastModified) {
         this.path = path;
@@ -15,10 +16,18 @@ public class FileInfo implements Comparable<FileInfo> {
         this.chunks = new ArrayList<>();
     }
 
-    public FileInfo(String path, Date lastModified, List<Long> chunks) {
+    public FileInfo(String path, Date lastModified, int lastChunkSize) {
+        this.path = path;
+        this.lastModified = lastModified;
+        this.chunks = new ArrayList<>();
+        this.lastChunkSize = lastChunkSize;
+    }
+
+    public FileInfo(String path, Date lastModified, List<Long> chunks, int lastChunkSize) {
         this.path = path;
         this.lastModified = lastModified;
         this.chunks = chunks;
+        this.lastChunkSize = lastChunkSize;
     }
 
     public String getPath() {
@@ -37,12 +46,20 @@ public class FileInfo implements Comparable<FileInfo> {
         return this.chunks;
     }
 
+    public int getChunkIndex(long chunk) {
+        return this.chunks.indexOf(chunk);
+    }
+
     public void setChunks(List<Long> chunks) {
         this.chunks = chunks;
     }
 
     public int getChunksSize() {
         return this.chunks.size();
+    }
+
+    public int getLastChunkSize() {
+        return this.lastChunkSize;
     }
 
     /**
@@ -96,9 +113,5 @@ public class FileInfo implements Comparable<FileInfo> {
             return this.path.equals(other.path) && this.lastModified.equals(other.lastModified) && sameChuncks;
         }
         return false;
-    }
-
-    public int getChunkPos(long chunk) {
-        return this.chunks.indexOf(chunk);
     }
 }

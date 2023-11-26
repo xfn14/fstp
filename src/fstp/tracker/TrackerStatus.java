@@ -21,7 +21,7 @@ public class TrackerStatus {
         this.downloadPool = new HashMap<>();
     }
 
-    public FileInfo getMostRecentFile(String path, Date date) {
+    public FileInfo getMostRecentFile(String path) {
         return this.files.values().stream()
             .flatMap(List::stream)
             .filter(fileInfo -> fileInfo.getPath().equals(path))
@@ -62,7 +62,7 @@ public class TrackerStatus {
             if (peerFiles == null || peerFiles.size() == 0) continue;
 
             for (FileInfo peerFileInfo : peerFiles) {
-                FileInfo mostRecentFileInfo = this.getMostRecentFile(peerFileInfo.getPath(), peerFileInfo.getLastModified());
+                FileInfo mostRecentFileInfo = this.getMostRecentFile(peerFileInfo.getPath());
                 if (mostRecent.containsKey(mostRecentFileInfo.getPath())) continue;
 
                 List<String> peersWithFile = this.getPeersWithFile(mostRecentFileInfo);
@@ -134,6 +134,17 @@ public class TrackerStatus {
 
         this.downloadPool.clear();
         this.downloadPool.putAll(newDowloadPool);
+    }
+
+    public void initDownloadProgress(String path, String addr) {
+        if (!this.downloadPool.containsKey(path)) {
+            HashMap<String, List<Long>> map = new HashMap<>();
+            map.put(addr, new ArrayList<>());
+            this.downloadPool.put(path, map);
+            return;
+        }
+
+        this.downloadPool.get(path).put(addr, new ArrayList<>());
     }
 
     public Map<String, List<Long>> getDownloadProgress(String addr) {

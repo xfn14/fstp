@@ -47,7 +47,7 @@ public class UDPHandler {
         this.connection.close();
     }
 
-    public Tuple<InetAddress, byte[]> receive() throws IOException {
+    public Tuple<Tuple<String, Integer>, byte[]> receive() throws IOException {
         return this.connection.receive();
     }
 }
