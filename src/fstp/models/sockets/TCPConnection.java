@@ -1,4 +1,4 @@
-package fstp.sockets;
+package fstp.models.sockets;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

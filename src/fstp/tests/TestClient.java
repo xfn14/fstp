@@ -9,7 +9,7 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 
 import fstp.Constants;
-import fstp.sockets.UDPConnection;
+import fstp.models.sockets.UDPConnection;
 import fstp.utils.Tuple;
 
 public class TestClient {

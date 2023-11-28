@@ -1,4 +1,4 @@
-package fstp.sockets;
+package fstp.models.sockets;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

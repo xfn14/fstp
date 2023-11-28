@@ -3,13 +3,11 @@ package fstp.node;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import fstp.Constants;
 import fstp.models.FileInfo;
 import fstp.node.handlers.TCPHandler;
 import fstp.node.handlers.UDPHandler;
@@ -39,7 +37,7 @@ public class NodeHandler {
             Map<FileInfo, List<String>> response = this.tcpHandler.getUpdateList();
             this.nodeStatus.setUpdateMap(response);
         
-            Interperter interperter = new Interperter(this.tcpHandler, this.udpHandler, this.nodeStatus);
+            Interperter interperter = new Interperter(this.tcpHandler, this.nodeStatus);
             interperter.run();
 
             try {

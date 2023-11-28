@@ -1,7 +1,6 @@
 package fstp.node;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,20 +10,16 @@ import java.util.Map;
 import fstp.models.FileDownload;
 import fstp.models.FileInfo;
 import fstp.node.handlers.TCPHandler;
-import fstp.node.handlers.UDPHandler;
-import fstp.utils.FileUtils;
 import fstp.utils.Tuple;
 
 public class Interperter {
     private static final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
     
     private TCPHandler tcpHandler;
-    private UDPHandler udpHandler;
     private NodeStatus nodeStatus;
 
-    public Interperter(TCPHandler tcpHandler, UDPHandler udpHandler, NodeStatus nodeStatus) {
+    public Interperter(TCPHandler tcpHandler, NodeStatus nodeStatus) {
         this.tcpHandler = tcpHandler;
-        this.udpHandler = udpHandler;
         this.nodeStatus = nodeStatus;
     }
 

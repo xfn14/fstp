@@ -6,11 +6,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.Date;
 
-import fstp.sockets.UDPConnection;
+import fstp.models.sockets.UDPConnection;
 import fstp.utils.Tuple;
 
 public class TestServer {

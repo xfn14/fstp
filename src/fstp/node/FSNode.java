@@ -9,10 +9,10 @@ import java.util.logging.Logger;
 
 import fstp.Constants;
 import fstp.handlers.LoggerHandler;
+import fstp.models.sockets.TCPConnection;
+import fstp.models.sockets.UDPConnection;
 import fstp.node.handlers.TCPHandler;
 import fstp.node.handlers.UDPHandler;
-import fstp.sockets.TCPConnection;
-import fstp.sockets.UDPConnection;
 
 public class FSNode {
     public static Logger logger = Logger.getLogger("FS-Node");

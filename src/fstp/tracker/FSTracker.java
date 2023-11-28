@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 
 import fstp.Constants;
 import fstp.handlers.LoggerHandler;
-import fstp.sockets.TCPConnection;
+import fstp.models.sockets.TCPConnection;
 
 public class FSTracker {
     public static Logger logger = Logger.getLogger("FS-Tracker");

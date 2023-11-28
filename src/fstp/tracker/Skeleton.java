@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 import fstp.models.FileInfo;
 import fstp.models.Frame;
-import fstp.sockets.TCPConnection;
+import fstp.models.sockets.TCPConnection;
 
 public class Skeleton {
     private final TrackerStatus trackerStatus;

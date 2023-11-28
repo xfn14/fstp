@@ -13,8 +13,8 @@ import java.util.Map;
 
 import fstp.models.FileInfo;
 import fstp.models.Frame;
+import fstp.models.sockets.TCPConnection;
 import fstp.node.FSNode;
-import fstp.sockets.TCPConnection;
 import fstp.utils.Tuple;
 
 public class TCPHandler {

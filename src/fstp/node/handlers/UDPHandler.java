@@ -3,9 +3,8 @@ package fstp.node.handlers;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 
-import fstp.sockets.UDPConnection;
+import fstp.models.sockets.UDPConnection;
 import fstp.utils.Tuple;
 
 public class UDPHandler {
