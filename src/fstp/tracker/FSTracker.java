@@ -47,7 +47,7 @@ public class FSTracker {
                     for (; ; ) sk.handle(connection);
                 } catch (EOFException ignored){
                 } catch (Exception e){
-                    logger.warning("Error handling connection. " + e.getMessage());
+                    logger.warning("Error handling connection. Maybe the client disconnected?");
                     e.printStackTrace();
                 }
 

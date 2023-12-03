@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
-import fstp.node.FSNode;
-
 public class FileUtils {
     /**
      * Get all files from a directory recursively

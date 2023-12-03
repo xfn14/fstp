@@ -38,7 +38,6 @@ public class Interperter {
                 
                 Map<FileInfo, List<Tuple<String, Integer>>> response = this.tcpHandler.getUpdateList();
                 this.nodeStatus.setUpdateMap(response);
-
                 this.nodeStatus.verifyUpdateList();
 
                 switch (args[0].toLowerCase()) {

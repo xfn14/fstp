@@ -46,7 +46,7 @@ public class Skeleton {
                 }
                 c.send(10, bufferOut);
 
-                FSTracker.logger.info("Sending ping response to " + c.getDevString() + " with " + peers.size() + " peers");
+                FSTracker.logger.info("Sending ping response to " + c.getDevString() + " with " + peers.size() + " peers (" + port + ")");
                 break;
             case 1:
                 String path = buffer.readUTF();
@@ -98,8 +98,10 @@ public class Skeleton {
                     out.writeUTF(f.getKey().getPath());
                     out.writeLong(f.getKey().getLastModified().getTime());
                     out.writeInt(f.getValue().size());
-                    for (String addr : f.getValue())
+                    for (String addr : f.getValue()) {
                         out.writeUTF(addr);
+                        out.writeInt(this.trackerStatus.getPeerPort(addr));
+                    }
                 }
 
                 FSTracker.logger.info("Sending update list to " + c.getDevString() + " with " + toUpdate.size() + " files");

@@ -33,6 +33,12 @@ public class NodeHandler {
                 FSNode.logger.severe("Error registering some files to Tracker.");
                 return;
             }
+
+            List<Tuple<String, Integer>> peers = this.tcpHandler.ping(nodeStatus.getPort());
+            if (peers.size() != 0) {
+                this.nodeStatus.clearPeers();
+                this.nodeStatus.getPeers().addAll(peers);
+            }
         
             Map<FileInfo, List<Tuple<String, Integer>>> response = this.tcpHandler.getUpdateList();
             this.nodeStatus.setUpdateMap(response);
