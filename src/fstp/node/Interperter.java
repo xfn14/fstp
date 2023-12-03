@@ -30,13 +30,13 @@ public class Interperter {
                 String command = stdin.readLine();
                 String[] args = command.split(" ");
 
-                List<String> peers = this.tcpHandler.ping();
+                List<Tuple<String, Integer>> peers = this.tcpHandler.ping(nodeStatus.getPort());
                 if (peers.size() != 0) {
                     this.nodeStatus.clearPeers();
                     this.nodeStatus.getPeers().addAll(peers);
                 }
                 
-                Map<FileInfo, List<String>> response = this.tcpHandler.getUpdateList();
+                Map<FileInfo, List<Tuple<String, Integer>>> response = this.tcpHandler.getUpdateList();
                 this.nodeStatus.setUpdateMap(response);
 
                 this.nodeStatus.verifyUpdateList();
@@ -58,7 +58,7 @@ public class Interperter {
                             break;
                         }
 
-                        Tuple<FileInfo, List<String>> updateFileInfo = this.nodeStatus.getUpdateFileInfo(args[1]);
+                        Tuple<FileInfo, List<Tuple<String, Integer>>> updateFileInfo = this.nodeStatus.getUpdateFileInfo(args[1]);
                         if (updateFileInfo == null) {
                             FSNode.logger.warning("File " + args[1] + " can't be updated. Use LIST to check for available files to update.");
                             break;
@@ -80,7 +80,7 @@ public class Interperter {
     }
 
     private String list() {
-        Map<FileInfo, List<String>> updateList = this.tcpHandler.getUpdateList();
+        Map<FileInfo, List<Tuple<String, Integer>>> updateList = this.tcpHandler.getUpdateList();
         nodeStatus.setUpdateMap(updateList);
         StringBuilder sb = new StringBuilder();
         if (updateList.size() == 0) {
@@ -88,12 +88,12 @@ public class Interperter {
             return sb.toString();
         }
 
-        Map<FileInfo, List<String>> newFiles = new HashMap<>();
-        Map<FileInfo, List<String>> updateFiles = new HashMap<>();
+        Map<FileInfo, List<Tuple<String, Integer>>> newFiles = new HashMap<>();
+        Map<FileInfo, List<Tuple<String, Integer>>> updateFiles = new HashMap<>();
         
-        for (Map.Entry<FileInfo, List<String>> entry : updateList.entrySet()) {
+        for (Map.Entry<FileInfo, List<Tuple<String, Integer>>> entry : updateList.entrySet()) {
             FileInfo fileInfo = entry.getKey();
-            List<String> peers = entry.getValue();
+            List<Tuple<String, Integer>> peers = entry.getValue();
 
             if (this.nodeStatus.getFileInfos().containsKey(fileInfo.getPath()))
                 updateFiles.put(fileInfo, peers);
@@ -102,9 +102,9 @@ public class Interperter {
 
         if (newFiles.size() > 0) {
             sb.append("New files:\n");
-            for (Map.Entry<FileInfo, List<String>> entry : newFiles.entrySet()) {
+            for (Map.Entry<FileInfo, List<Tuple<String, Integer>>> entry : newFiles.entrySet()) {
                 FileInfo fileInfo = entry.getKey();
-                List<String> peers = entry.getValue();
+                List<Tuple<String, Integer>> peers = entry.getValue();
 
                 sb.append("\t").append(fileInfo.getPath()).append(" - ").append(fileInfo.getLastModified()).append(" - ").append(peers.size()).append(" peers\n");
             }
@@ -112,9 +112,9 @@ public class Interperter {
 
         if (updateFiles.size() > 0) {
             sb.append("Files to update:\n");
-            for (Map.Entry<FileInfo, List<String>> entry : updateFiles.entrySet()) {
+            for (Map.Entry<FileInfo, List<Tuple<String, Integer>>> entry : updateFiles.entrySet()) {
                 FileInfo fileInfo = entry.getKey();
-                List<String> peers = entry.getValue();
+                List<Tuple<String, Integer>> peers = entry.getValue();
 
                 sb.append("\t").append(fileInfo.getPath()).append(" - ").append(fileInfo.getLastModified()).append(" - ").append(peers.size()).append(" peers\n");
             }
@@ -123,7 +123,7 @@ public class Interperter {
         return sb.toString();
     }
 
-    private void get(FileInfo updateFile, List<String> peers) {
+    private void get(FileInfo updateFile, List<Tuple<String, Integer>> peers) {
         Tuple<Short, List<Long>> res = this.tcpHandler.getFileChunks(updateFile.getPath());
         if (res == null) {
             FSNode.logger.warning("Error getting file " + updateFile.getPath());

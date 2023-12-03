@@ -32,13 +32,18 @@ public class Skeleton {
 
         switch (frame.getTag()) {
             case 0:
+                int port = buffer.readInt();
+                this.trackerStatus.addPeerPort(c.getDevString(), port);
+
                 List<String> peers = this.trackerStatus.getFiles().keySet().stream()
                     .filter(peer -> !peer.equals(c.getDevString()))
                     .collect(Collectors.toList());
 
                 out.writeInt(peers.size());
-                for (String peer : peers)
+                for (String peer : peers) {
                     out.writeUTF(peer);
+                    out.writeInt(this.trackerStatus.getPeerPort(peer));
+                }
                 c.send(10, bufferOut);
 
                 FSTracker.logger.info("Sending ping response to " + c.getDevString() + " with " + peers.size() + " peers");
@@ -130,7 +135,9 @@ public class Skeleton {
 
                 out.writeInt(progress.size());
                 for (Entry<String, List<Long>> entry : progress.entrySet()) {
-                    out.writeUTF(entry.getKey());
+                    String addr = entry.getKey();
+                    out.writeUTF(addr);
+                    out.writeInt(this.trackerStatus.getPeerPort(entry.getKey()));
                     out.writeInt(entry.getValue().size());
                     for (Long block : entry.getValue())
                         out.writeLong(block);
@@ -138,6 +145,14 @@ public class Skeleton {
 
                 FSTracker.logger.info("Sending download progress to " + c.getDevString() + " for file " + file);
                 c.send((byte) 22, bufferOut);
+                break;
+            case 5:
+                String pathFile = buffer.readUTF();
+                long chunkId = buffer.readLong();
+                this.trackerStatus.addDownloadProgress(pathFile, c.getDevString(), chunkId);
+
+                FSTracker.logger.info("Adding download progress for " + c.getDevString() + " for file " + pathFile + " chunk " + chunkId);
+                c.send((byte) 23, bufferOut);
                 break;
         }
 

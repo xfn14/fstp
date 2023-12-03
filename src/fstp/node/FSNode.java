@@ -46,7 +46,7 @@ public class FSNode {
 
         NodeStatus nodeStatus;
         try {
-            nodeStatus = new NodeStatus(dir);
+            nodeStatus = new NodeStatus(dir, port);
         } catch (IOException e) {
             logger.severe("Error loading files from " + path);
             return;

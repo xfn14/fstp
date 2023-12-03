@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fstp.models.FileDownload;
+import fstp.utils.Tuple;
 
 public class FilePool {
-    private final List<String> peers;
+    private final List<Tuple<String, Integer>> peers;
     private final FileDownload fileDownload;
     private int iteration = 0;
 
-    public FilePool(FileDownload fileDownload, List<String> peers) {
+    public FilePool(FileDownload fileDownload, List<Tuple<String, Integer>> peers) {
         this.peers = peers;
         this.fileDownload = fileDownload;
     }
@@ -37,7 +38,7 @@ public class FilePool {
         ++this.iteration;
     }
 
-    public List<String> getPeers() {
+    public List<Tuple<String, Integer>> getPeers() {
         return this.peers;
     }
 
@@ -55,18 +56,6 @@ public class FilePool {
 
     public void gotChunk(long chunkId, byte[] chunkData) {
         this.fileDownload.add(chunkId, chunkData);
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("FilePool {\n");
-        sb.append("\tpeers: [");
-        for (String peer : this.peers) sb.append(peer + ", ");
-        sb.append("]\n");
-        sb.append("\tfileDownload: " + this.fileDownload + "\n");
-        sb.append("}");
-        return sb.toString();
     }
 
     public String getProgress() {

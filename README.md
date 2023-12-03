@@ -35,6 +35,8 @@ Tamanho do pacote: 4096
 #### Payload
 
 - 0 - Ping
+    - __4 bytes__ - udp port (int)
+
 - 1 - Register File
     - __2 + str len + str bytes__ - file_path (string)
     - __8 bytes__ - last modified (long)
@@ -51,7 +53,16 @@ Tamanho do pacote: 4096
 - 4 - Get list of peers downloading file and blocks already downloaded
     - __2 + str len + str bytes__ - file_path (string)
 
+- 5 - ACK file chunk
+    - __2 + str len + str bytes__ - file_path (string)
+    - __8 bytes__ - chunk id (long)
+
 - 10 - List of nodes connected (Response to code 0)
+    - __4 bytes__ - number of peers (int)
+        - *per peer*
+        - __2 + str len + str bytes__ -  peer address (long)
+        - __4 bytes__ - peer port (int)
+
 - 11 - No nodes connected (Response to code 0)
 - 12 - File registered (Response to code 1)
 
@@ -63,6 +74,7 @@ Tamanho do pacote: 4096
         - __4 bytes__ - number of peers (int)
             - *per peer*
             - __2 + str len + str bytes__ -  peer address (long)
+            - __4 bytes__ - peer port (int)
 
 - 21 - File blocks (Response to code 3)
     - __2 bytes__ - number of used bytes on last chunk (short)
@@ -74,6 +86,7 @@ Tamanho do pacote: 4096
     - __4 bytes__ - number of peers (int)
         - *per peer*
         - __2 + str len + str bytes__ - peer address (string)
+        - __4 bytes__ - peer port (int)
         - __4 bytes__ - number of chunks downloaded (int)
             - *per chunk*
             - __8 bytes__ - chunk id (long)

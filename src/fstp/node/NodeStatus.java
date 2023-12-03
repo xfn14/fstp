@@ -16,16 +16,18 @@ import fstp.utils.Tuple;
 
 public class NodeStatus {
     private final File dir;
+    private final int port;
     private boolean running;
     private FilePool downloading;
-    private final List<String> peers = new ArrayList<>();
+    private final List<Tuple<String, Integer>> peers = new ArrayList<>();
     private final Map<String, FileInfo> fileInfos = new HashMap<>();
-    private Map<FileInfo, List<String>> updateMap = new HashMap<>();
+    private Map<FileInfo, List<Tuple<String, Integer>>> updateMap = new HashMap<>();
 
-    public NodeStatus(File dir) throws IOException {
+    public NodeStatus(File dir, int port) throws IOException {
         this.dir = dir;
         this.running = true;
         this.downloading = null;
+        this.port = port;
 
         for (File file : FileUtils.getFiles(dir))
             this.loadFile(file);
@@ -88,15 +90,15 @@ public class NodeStatus {
     }
 
     public void verifyUpdateList() {
-        Map<FileInfo, List<String>> newUpdateMap = new HashMap<>();
-        for (Map.Entry<FileInfo, List<String>> entry : this.updateMap.entrySet()) {
+        Map<FileInfo, List<Tuple<String, Integer>>> newUpdateMap = new HashMap<>();
+        for (Map.Entry<FileInfo, List<Tuple<String, Integer>>> entry : this.updateMap.entrySet()) {
             FileInfo fileInfo = entry.getKey();
-            List<String> peers = entry.getValue();
+            List<Tuple<String, Integer>> peers = entry.getValue();
 
             if (peers.size() == 0) continue;
 
-            List<String> newPeers = new ArrayList<>();
-            for (String peer : peers)
+            List<Tuple<String, Integer>> newPeers = new ArrayList<>();
+            for (Tuple<String, Integer> peer : peers)
                 if (this.peers.contains(peer))
                     newPeers.add(peer);
                 
@@ -106,8 +108,8 @@ public class NodeStatus {
         this.updateMap = newUpdateMap;
     }
 
-    public Tuple<FileInfo, List<String>> getUpdateFileInfo(String path) {
-        for (Map.Entry<FileInfo, List<String>> entry : this.updateMap.entrySet()) {
+    public Tuple<FileInfo, List<Tuple<String, Integer>>> getUpdateFileInfo(String path) {
+        for (Map.Entry<FileInfo, List<Tuple<String, Integer>>> entry : this.updateMap.entrySet()) {
             FileInfo fileInfo = entry.getKey();
             if (fileInfo.getPath().equals(path))
                 return new Tuple<>(fileInfo, entry.getValue());
@@ -115,11 +117,11 @@ public class NodeStatus {
         return null;
     }
 
-    public Map<FileInfo, List<String>> getUpdateMap() {
+    public Map<FileInfo, List<Tuple<String, Integer>>> getUpdateMap() {
         return this.updateMap;
     }
 
-    public void setUpdateMap(Map<FileInfo, List<String>> updateMap) {
+    public void setUpdateMap(Map<FileInfo, List<Tuple<String, Integer>>> updateMap) {
         this.updateMap = updateMap;
     }
 
@@ -140,12 +142,12 @@ public class NodeStatus {
         this.downloading = downloading;
     }
 
-    public List<String> getPeers() {
+    public List<Tuple<String, Integer>> getPeers() {
         return this.peers;
     }
 
-    public void addPeer(String peer) {
-        this.peers.add(peer);
+    public void addPeer(String peer, int port) {
+        this.peers.add(new Tuple<>(peer, port));
     }
 
     public void clearPeers() {
@@ -172,5 +174,9 @@ public class NodeStatus {
         if (this.downloading == null) return;
 
         this.downloading.gotChunk(chunkId, chunkData);
+    }
+
+    public int getPort() {
+        return this.port;
     }
 }

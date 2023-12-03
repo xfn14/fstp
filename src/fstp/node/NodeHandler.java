@@ -34,7 +34,7 @@ public class NodeHandler {
                 return;
             }
         
-            Map<FileInfo, List<String>> response = this.tcpHandler.getUpdateList();
+            Map<FileInfo, List<Tuple<String, Integer>>> response = this.tcpHandler.getUpdateList();
             this.nodeStatus.setUpdateMap(response);
         
             Interperter interperter = new Interperter(this.tcpHandler, this.nodeStatus);
@@ -97,7 +97,8 @@ public class NodeHandler {
                                 FSNode.logger.warning("Invalid checksum for chunk " + chunkId + ".\nExpected " + chunkId + " but got " + checksum + ".");
                                 break;
                             }
-
+                            
+                            this.tcpHandler.ackChunk(this.nodeStatus.getDownloading().getPath(), chunkId);
                             this.nodeStatus.addChunkToDownload(chunkId, chunkData);
                             FSNode.logger.info("Received chunk " + chunkId + " from " + addr.getX() + ":" + addr.getY());
                             break;
@@ -127,8 +128,8 @@ public class NodeHandler {
                 if (this.nodeStatus.getDownloading() == null) continue;
 
                 FilePool filePool = this.nodeStatus.getDownloading();
-                for (String peer : filePool.getPeers()) {
-                    String[] addr = peer.split(":");
+                for (Tuple<String, Integer> peer : filePool.getPeers()) {
+                    String[] addr = peer.getX().split(":");
                     long chunkToRequest = filePool.getNextChunkToRequest();
                     if (chunkToRequest == -1L) {
                         FileInfo newFileInfo = this.nodeStatus.saveFile(filePool.getFileDownload());
@@ -143,7 +144,7 @@ public class NodeHandler {
                     }
 
                     try {
-                        this.udpHandler.requestChunk(filePool.getPath(), chunkToRequest, addr[0], 9092); // Integer.parseInt(addr[1])
+                        this.udpHandler.requestChunk(filePool.getPath(), chunkToRequest, addr[0], peer.getY());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

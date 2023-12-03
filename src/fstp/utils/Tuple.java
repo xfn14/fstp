@@ -79,7 +79,7 @@ public class Tuple<X, Y> implements Serializable {
 
     /**
      * Clone this object
-     *
+     *a
      * @return Tuple's object
      */
     @Override

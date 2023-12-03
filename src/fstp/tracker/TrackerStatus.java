@@ -12,11 +12,13 @@ import fstp.models.FileInfo;
 import fstp.utils.Tuple;
 
 public class TrackerStatus {
+    private final Map<String, Integer> peerPorts;
     private final Map<String, List<FileInfo>> files;
     private final Map<String, Map<String, List<Long>>> downloadPool;
     
     public TrackerStatus() {
         this.files = new HashMap<>();
+        this.peerPorts = new HashMap<>();
         this.downloadPool = new HashMap<>();
     }
 
@@ -133,6 +135,7 @@ public class TrackerStatus {
 
         this.downloadPool.clear();
         this.downloadPool.putAll(newDowloadPool);
+        this.peerPorts.remove(node);
     }
 
     public void initDownloadProgress(String path, String addr) {
@@ -144,6 +147,13 @@ public class TrackerStatus {
         }
 
         this.downloadPool.get(path).put(addr, new ArrayList<>());
+    }
+
+    public void addDownloadProgress(String path, String addr, long chunk) {
+        if (!this.downloadPool.containsKey(path)
+        ||  !this.downloadPool.get(path).containsKey(addr))
+            this.initDownloadProgress(path, addr);
+        this.downloadPool.get(path).get(addr).add(chunk);
     }
 
     public Map<String, List<Long>> getDownloadProgress(String addr) {
@@ -158,5 +168,17 @@ public class TrackerStatus {
     public void removeDownloadProgress(String path, String addr) {
         if (!this.downloadPool.containsKey(path)) return;
         this.downloadPool.get(path).remove(addr);
+    }
+
+    public void addPeerPort(String addr, int port) {
+        this.peerPorts.put(addr, port);
+    }
+
+    public void removePeerPort(String addr) {
+        this.peerPorts.remove(addr);
+    }
+
+    public int getPeerPort(String addr) {
+        return this.peerPorts.get(addr);
     }
 }

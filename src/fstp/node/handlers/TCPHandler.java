@@ -28,10 +28,11 @@ public class TCPHandler {
         this.out = new DataOutputStream(this.buffer);
     }
 
-    public List<String> ping() {
-        List<String> peers = new ArrayList<>();
+    public List<Tuple<String, Integer>> ping(int port) {
+        List<Tuple<String, Integer>> peers = new ArrayList<>();
 
         try {
+            this.out.writeInt(port);
             this.connection.send(0, this.buffer);
 
             Frame response = this.connection.receive();
@@ -39,8 +40,11 @@ public class TCPHandler {
 
             DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.getData()));
             int nPeers = in.readInt();
-            for (int i = 0; i < nPeers; i++) 
-                peers.add(in.readUTF());
+            for (int i = 0; i < nPeers; i++) {
+                String addr = in.readUTF();
+                int peerPort = in.readInt();
+                peers.add(new Tuple<>(addr, peerPort));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -83,8 +87,8 @@ public class TCPHandler {
         return 40;
     }
 
-    public Map<FileInfo, List<String>> getUpdateList() {
-        Map<FileInfo, List<String>> res = new HashMap<>();
+    public Map<FileInfo, List<Tuple<String, Integer>>> getUpdateList() {
+        Map<FileInfo, List<Tuple<String, Integer>>> res = new HashMap<>();
         
         try {
             this.connection.send(2, this.buffer);
@@ -101,9 +105,12 @@ public class TCPHandler {
                 int npeers = in.readInt();
                 if (npeers == 0) continue;
 
-                List<String> peers = new ArrayList<>();
-                for (int j = 0; j < npeers; j++) 
-                    peers.add(in.readUTF());
+                List<Tuple<String, Integer>> peers = new ArrayList<>();
+                for (int j = 0; j < npeers; j++) {
+                    String addr = in.readUTF();
+                    int port = in.readInt();
+                    peers.add(new Tuple<>(addr, port));
+                }
 
                 res.put(new FileInfo(path, new Date(lastModified)), peers);
             }
@@ -139,8 +146,18 @@ public class TCPHandler {
         return null;
     }
 
-    public Map<String, List<Long>> listPeersDownloadingFile(String file) {
-        Map<String, List<Long>> res = new HashMap<>();
+    public void ackChunk(String path, long chunkId) {
+        try {
+            this.out.writeUTF(path);
+            this.out.writeLong(chunkId);
+            this.connection.send(5, this.buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Map<Tuple<String, Integer>, List<Long>> listPeersDownloadingFile(String file) {
+        Map<Tuple<String, Integer>, List<Long>> res = new HashMap<>();
 
         try {
             this.out.writeUTF(file);
@@ -154,13 +171,14 @@ public class TCPHandler {
 
             for (int i = 0; i < len; i++) {
                 String peer = in.readUTF();
+                int port = in.readInt();
                 int nChunks = in.readInt();
 
                 List<Long> chunks = new ArrayList<>();
                 for (int j = 0; j < nChunks; j++)
                     chunks.add(in.readLong());
 
-                res.put(peer, chunks);
+                res.put(new Tuple<>(peer, port), chunks);
             }
         } catch (IOException e) {
             e.printStackTrace();
