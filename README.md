@@ -91,14 +91,17 @@ Tamanho do pacote: 4096
             - *per chunk*
             - __8 bytes__ - chunk id (long)
 
-- 30 - Chunk received
-    - __2 + str len + str bytes__ - file path (string)
-    - __8 bytes__ - chunk id (long)
+- 30 - List of nodes needing that chunk
+    - __4 bytes__ - number of peers (int)
+        - *per peer*
+        - __2 + str len + str bytes__ - peer address (string)
+        - __4 bytes__ - peer port (int)
 
 - 40 - Failed to register file (Response to code 1)
 - 41 - No files to update (Response to code 2)
 - 42 - File empty (Response to code 3)
 - 43 - No peers downloading file (Response to code 4)
+- 44 - No peers needs chunk (Response to code 5)
 
 ## Implementação
 

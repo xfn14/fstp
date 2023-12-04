@@ -103,9 +103,12 @@ public class NodeHandler {
                                 FSNode.logger.warning("Invalid checksum for chunk " + chunkId + ".\nExpected " + chunkId + " but got " + checksum + ".");
                                 break;
                             }
-                            
-                            this.tcpHandler.ackChunk(this.nodeStatus.getDownloading().getPath(), chunkId);
+
                             this.nodeStatus.addChunkToDownload(chunkId, chunkData);
+
+                            List<Tuple<String, Integer>> resend = this.tcpHandler.ackChunk(this.nodeStatus.getDownloading().getPath(), chunkId);
+                            for (Tuple<String, Integer> peer : resend)
+                                this.udpHandler.sendChunk(chunkId, chunkData, peer.getX(), peer.getY());
                             FSNode.logger.info("Received chunk " + chunkId + " from " + addr.getX() + ":" + addr.getY());
                             break;
                         default:

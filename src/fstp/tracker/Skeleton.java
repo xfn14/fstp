@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import fstp.models.FileInfo;
 import fstp.models.Frame;
 import fstp.models.sockets.TCPConnection;
+import fstp.utils.Tuple;
 
 public class Skeleton {
     private final TrackerStatus trackerStatus;
@@ -152,6 +153,18 @@ public class Skeleton {
                 String pathFile = buffer.readUTF();
                 long chunkId = buffer.readLong();
                 this.trackerStatus.addDownloadProgress(pathFile, c.getDevString(), chunkId);
+                List<Tuple<String, Integer>> peersNeedChunk = this.trackerStatus.getPeersNeedFile(pathFile, chunkId);
+
+                if (peersNeedChunk == null || peersNeedChunk.size() == 0) {
+                    c.send((byte) 44, bufferOut);
+                    break;
+                }
+
+                out.writeInt(peersNeedChunk.size());
+                for (Tuple<String, Integer> peer : peersNeedChunk) {
+                    out.writeUTF(peer.getX());
+                    out.writeInt(peer.getY());
+                }
 
                 FSTracker.logger.info("Adding download progress for " + c.getDevString() + " for file " + pathFile + " chunk " + chunkId);
                 c.send((byte) 23, bufferOut);

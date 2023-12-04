@@ -146,14 +146,30 @@ public class TCPHandler {
         return null;
     }
 
-    public void ackChunk(String path, long chunkId) {
+    public List<Tuple<String, Integer>> ackChunk(String path, long chunkId) {
+        List<Tuple<String, Integer>> res = new ArrayList<>();
+
         try {
             this.out.writeUTF(path);
             this.out.writeLong(chunkId);
             this.connection.send(5, this.buffer);
+
+            Frame response = this.connection.receive();
+            if (response.getTag() == 51) return res;
+
+            DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.getData()));
+            int len = in.readInt();
+
+            for (int i = 0; i < len; i++) {
+                String addr = in.readUTF();
+                int port = in.readInt();
+                res.add(new Tuple<>(addr, port));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return res;
     }
 
     public Map<Tuple<String, Integer>, List<Long>> listPeersDownloadingFile(String file) {

@@ -181,4 +181,22 @@ public class TrackerStatus {
     public int getPeerPort(String addr) {
         return this.peerPorts.get(addr);
     }
+
+    public List<Tuple<String, Integer>> getPeersNeedFile(String pathFile, long chunkId) {
+        List<Tuple<String, Integer>> res = new ArrayList<>();
+        for (Entry<String, Map<String, List<Long>>> entry : this.downloadPool.entrySet()) {
+            String path = entry.getKey();
+            Map<String, List<Long>> map = entry.getValue();
+
+            if (!path.equals(pathFile)) continue;
+            for (Entry<String, List<Long>> entry2 : map.entrySet()) {
+                String addr = entry2.getKey();
+                List<Long> chunks = entry2.getValue();
+
+                if (!chunks.contains(chunkId))
+                    res.add(new Tuple<>(addr, this.peerPorts.get(addr)));
+            }
+        }
+        return null;
+    }
 }
