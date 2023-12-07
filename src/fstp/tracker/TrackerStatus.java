@@ -15,6 +15,10 @@ public class TrackerStatus {
     private final Map<String, Integer> peerPorts;
     private final Map<String, List<FileInfo>> files;
     private final Map<String, Map<String, List<Long>>> downloadPool;
+
+    public Map<String, Map<String, List<Long>>> getDownloadPool() {
+        return downloadPool;
+    }
     
     public TrackerStatus() {
         this.files = new HashMap<>();
@@ -197,6 +201,6 @@ public class TrackerStatus {
                     res.add(new Tuple<>(addr, this.peerPorts.get(addr)));
             }
         }
-        return null;
+        return res;
     }
 }

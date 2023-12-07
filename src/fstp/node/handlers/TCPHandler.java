@@ -149,13 +149,14 @@ public class TCPHandler {
     public List<Tuple<String, Integer>> ackChunk(String path, long chunkId) {
         List<Tuple<String, Integer>> res = new ArrayList<>();
 
+        System.out.println("ACKING CHUNK " + chunkId + " FROM " + path);
         try {
             this.out.writeUTF(path);
             this.out.writeLong(chunkId);
             this.connection.send(5, this.buffer);
 
             Frame response = this.connection.receive();
-            if (response.getTag() == 51) return res;
+            if (response.getTag() == 44) return res;
 
             DataInputStream in = new DataInputStream(new ByteArrayInputStream(response.getData()));
             int len = in.readInt();

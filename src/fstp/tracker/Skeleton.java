@@ -153,8 +153,13 @@ public class Skeleton {
                 String pathFile = buffer.readUTF();
                 long chunkId = buffer.readLong();
                 this.trackerStatus.addDownloadProgress(pathFile, c.getDevString(), chunkId);
-                List<Tuple<String, Integer>> peersNeedChunk = this.trackerStatus.getPeersNeedFile(pathFile, chunkId);
 
+                FSTracker.logger.info("Adding download progress for " + c.getDevString() + " for file " + pathFile + " chunk " + chunkId);
+                
+                List<Tuple<String, Integer>> peersNeedChunk = this.trackerStatus.getPeersNeedFile(pathFile, chunkId);
+                for (Tuple<String, Integer> peer : peersNeedChunk)
+                    FSTracker.logger.info("Peer " + peer.getX() + ":" + peer.getY() + " needs chunk " + chunkId);
+                    
                 if (peersNeedChunk == null || peersNeedChunk.size() == 0) {
                     c.send((byte) 44, bufferOut);
                     break;
@@ -166,7 +171,6 @@ public class Skeleton {
                     out.writeInt(peer.getY());
                 }
 
-                FSTracker.logger.info("Adding download progress for " + c.getDevString() + " for file " + pathFile + " chunk " + chunkId);
                 c.send((byte) 23, bufferOut);
                 break;
         }

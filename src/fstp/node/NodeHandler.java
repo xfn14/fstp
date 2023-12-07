@@ -71,6 +71,7 @@ public class NodeHandler {
                     DataInputStream in = new DataInputStream(new ByteArrayInputStream(data.getY()));
                     Tuple<String, Integer> addr = data.getX();
                     byte tag = in.readByte();
+                    
                     switch (tag) {
                         case 1:
                             String path = in.readUTF();
@@ -108,11 +109,11 @@ public class NodeHandler {
 
                             List<Tuple<String, Integer>> resend = this.tcpHandler.ackChunk(this.nodeStatus.getDownloading().getPath(), chunkId);
                             for (Tuple<String, Integer> peer : resend)
-                                this.udpHandler.sendChunk(chunkId, chunkData, peer.getX(), peer.getY());
+                                this.udpHandler.sendChunk(chunkId, chunkData, peer.getX().split(":")[0], peer.getY());
                             FSNode.logger.info("Received chunk " + chunkId + " from " + addr.getX() + ":" + addr.getY());
                             break;
                         default:
-                            break;
+                            break;  
                     }
                 } catch (SocketException e) {
                     FSNode.logger.info("FS Transfer Protocol stopped listenning.");
@@ -134,9 +135,9 @@ public class NodeHandler {
     public Runnable initDownloadHandler() {
         return () -> {
             while (this.nodeStatus.isRunning()) {
-                if (this.nodeStatus.getDownloading() == null) continue;
-
                 FilePool filePool = this.nodeStatus.getDownloading();
+                if (filePool == null) continue;
+
                 for (Tuple<String, Integer> peer : filePool.getPeers()) {
                     String[] addr = peer.getX().split(":");
                     long chunkToRequest = filePool.getNextChunkToRequest();
@@ -157,6 +158,11 @@ public class NodeHandler {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
                 filePool.nextIteration();
             }

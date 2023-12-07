@@ -131,6 +131,7 @@ public class FileUtils {
     }
 
     public static void emptyFile(File file) throws IOException {
+        new File(file.getParent()).mkdirs();
         if (!file.exists())
             file.createNewFile();
 
