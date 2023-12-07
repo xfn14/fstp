@@ -149,7 +149,6 @@ public class TCPHandler {
     public List<Tuple<String, Integer>> ackChunk(String path, long chunkId) {
         List<Tuple<String, Integer>> res = new ArrayList<>();
 
-        System.out.println("ACKING CHUNK " + chunkId + " FROM " + path);
         try {
             this.out.writeUTF(path);
             this.out.writeLong(chunkId);
