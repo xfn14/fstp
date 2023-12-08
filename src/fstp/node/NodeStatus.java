@@ -33,6 +33,10 @@ public class NodeStatus {
             this.loadFile(file);
     }
 
+    public String getDirPath() {
+        return this.dir.getPath();
+    }
+
     public FileInfo loadFile(File file) throws IOException {
         String path = file.getPath().replace(dir.getPath() + "/", "");
         List<Long> chunks = FileUtils.getChunks(file, Constants.UDP_BUFFER_SIZE - 9);

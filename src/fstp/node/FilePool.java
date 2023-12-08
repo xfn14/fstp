@@ -1,19 +1,55 @@
 package fstp.node;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import fstp.models.FileDownload;
 import fstp.utils.Tuple;
 
 public class FilePool {
-    private final List<Tuple<String, Integer>> peers;
-    private final FileDownload fileDownload;
     private int iteration = 0;
+    private final FileDownload fileDownload;
+    private final List<Tuple<String, Integer>> peers;
+    private final Map<Tuple<String, Integer>, Tuple<Long, Date>> requested;
 
     public FilePool(FileDownload fileDownload, List<Tuple<String, Integer>> peers) {
         this.peers = peers;
         this.fileDownload = fileDownload;
+        this.requested = new HashMap<>();
+    }
+
+    public void addRequest(Tuple<String, Integer> peer, long chunkId) {
+        this.requested.put(peer, new Tuple<>(chunkId, new Date()));
+    }
+
+    public void removeRequest(long chunkId) {
+        Tuple<String, Integer> toRemove = null;
+        for (Tuple<String, Integer> peer : this.requested.keySet())
+            if (this.requested.get(peer).getX() == chunkId)
+                toRemove = peer;
+
+        if (toRemove != null) this.requested.remove(toRemove);
+    }
+
+    public void removeRequest(Tuple<String, Integer> peer) {
+        this.requested.remove(peer);
+    }
+
+    public Tuple<Long, Date> getRequest(Tuple<String, Integer> peer) {
+        return this.requested.get(peer);
+    }
+
+    public boolean hasRequested(Tuple<String, Integer> peer) {
+        return this.requested.containsKey(peer);
+    }
+
+    public boolean chunkRequested(long chunkId) {
+        for (Tuple<Long, Date> val : this.requested.values())
+            if (val.getX() == chunkId) return true;
+        return false;
     }
 
     public long getNextChunkToRequest() {
@@ -29,7 +65,7 @@ public class FilePool {
     public List<Long> getChunksToRequest() {
         List<Long> toRequest = new ArrayList<>();
         for (long chunkId : this.fileDownload.getChunks())
-            if (!this.fileDownload.gotten(chunkId))
+            if (!this.fileDownload.gotten(chunkId) && !this.chunkRequested(chunkId))
                 toRequest.add(chunkId);
         return toRequest;
     }

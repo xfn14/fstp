@@ -4,10 +4,12 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.SocketException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import fstp.Constants;
 import fstp.models.FileInfo;
 import fstp.node.handlers.TCPHandler;
 import fstp.node.handlers.UDPHandler;
@@ -106,6 +108,7 @@ public class NodeHandler {
                             }
 
                             this.nodeStatus.addChunkToDownload(chunkId, chunkData);
+                            this.nodeStatus.getDownloading().removeRequest(chunkId);
 
                             List<Tuple<String, Integer>> resend = this.tcpHandler.ackChunk(this.nodeStatus.getDownloading().getPath(), chunkId);
                             for (Tuple<String, Integer> peer : resend)
@@ -140,6 +143,13 @@ public class NodeHandler {
 
                 for (Tuple<String, Integer> peer : filePool.getPeers()) {
                     String[] addr = peer.getX().split(":");
+                    if (filePool.hasRequested(peer)) {
+                        Tuple<Long, Date> request = filePool.getRequest(peer);
+                        if (request.getY().getTime() + Constants.CHUNK_TIMEOUT > new Date().getTime())
+                            filePool.removeRequest(peer);
+                        continue;
+                    }
+
                     long chunkToRequest = filePool.getNextChunkToRequest();
                     if (chunkToRequest == -1L) {
                         FileInfo newFileInfo = this.nodeStatus.saveFile(filePool.getFileDownload());
@@ -155,14 +165,16 @@ public class NodeHandler {
 
                     try {
                         this.udpHandler.requestChunk(filePool.getPath(), chunkToRequest, addr[0], peer.getY());
+                        filePool.addRequest(peer, chunkToRequest);
+                        FSNode.logger.info("Requesting chunk " + chunkToRequest + " from " + addr[0] + ":" + peer.getY());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
                 try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.sleep(10);
+                } catch (Exception e) {
+                    FSNode.logger.warning("Error sleeping thread.");
                 }
                 filePool.nextIteration();
             }

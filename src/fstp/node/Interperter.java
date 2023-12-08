@@ -1,6 +1,8 @@
 package fstp.node;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -128,8 +130,8 @@ public class Interperter {
             FSNode.logger.warning("Error getting file " + updateFile.getPath());
             return;
         } else if (res.getY() == null || res.getY().size() == 0) {
-            FSNode.logger.info("File " + updateFile.getPath() + " is empty.");
-            this.nodeStatus.saveFile(
+            FSNode.logger.info("File " + updateFile.getPath() + " updated successfully.");
+            FileInfo newFile = this.nodeStatus.saveFile(
                 new FileDownload(
                     updateFile.getPath(),
                     updateFile.getLastModified(),
@@ -137,6 +139,13 @@ public class Interperter {
                     (short) 0
                 )
             );
+
+            try {
+                this.nodeStatus.loadFile(new File(this.nodeStatus.getDirPath() + "/" + newFile.getPath()));
+            } catch (IOException e) {
+                FSNode.logger.severe("Error reloading file " + newFile.getPath() + " to memory.");
+                e.printStackTrace();
+            }
             return;
         }
 
