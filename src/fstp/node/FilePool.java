@@ -11,6 +11,7 @@ import fstp.utils.Tuple;
 
 public class FilePool {
     private int iteration = 0;
+    private Date startTime = new Date();
     private final FileDownload fileDownload;
     private final List<Tuple<String, Integer>> peers;
     private final Map<Tuple<String, Integer>, Tuple<Long, Date>> requested;
@@ -68,6 +69,10 @@ public class FilePool {
             if (!this.fileDownload.gotten(chunkId) && !this.chunkRequested(chunkId))
                 toRequest.add(chunkId);
         return toRequest;
+    }
+
+    public Date getStartTime() {
+        return this.startTime;
     }
 
     public void nextIteration() {

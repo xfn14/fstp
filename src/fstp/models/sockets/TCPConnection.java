@@ -82,6 +82,7 @@ public class TCPConnection {
     }
 
     public String getDevString() {
-        return this.getAddress() + ":" + this.getPort();
+        return Constants.getNameByIp(this.getAddress());
+        // return this.getAddress() + ":" + this.getPort();
     }
 }

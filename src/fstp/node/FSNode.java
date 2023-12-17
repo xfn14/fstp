@@ -52,8 +52,9 @@ public class FSNode {
             return;
         }
 
+
         try {
-            Socket socket = new Socket(ip, Constants.DEFAULT_PORT);
+            Socket socket = new Socket(Constants.getDns().get(ip), Constants.DEFAULT_PORT);
             TCPConnection tcpConnection = new TCPConnection(socket);
             try {
                 UDPConnection udpConnection = new UDPConnection(port);

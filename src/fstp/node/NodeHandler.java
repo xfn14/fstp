@@ -164,9 +164,9 @@ public class NodeHandler {
                     }
 
                     try {
-                        this.udpHandler.requestChunk(filePool.getPath(), chunkToRequest, addr[0], peer.getY());
+                        this.udpHandler.requestChunk(filePool.getPath(), chunkToRequest, Constants.getDns().get(addr[0]), peer.getY());
                         filePool.addRequest(peer, chunkToRequest);
-                        FSNode.logger.info("Requesting chunk " + chunkToRequest + " from " + addr[0] + ":" + peer.getY());
+                        FSNode.logger.info("Requesting chunk " + chunkToRequest + " from " + Constants.getDns().get(addr[0]) + ":" + peer.getY());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

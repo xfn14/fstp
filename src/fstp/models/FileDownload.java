@@ -29,6 +29,10 @@ public class FileDownload extends FileInfo {
         return this.gotten.size() == this.getChunksSize();
     }
 
+    public int gottenSize() {
+        return this.gotten.size();
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

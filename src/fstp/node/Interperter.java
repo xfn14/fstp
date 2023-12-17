@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 
 import fstp.models.FileDownload;
 import fstp.models.FileInfo;
@@ -26,6 +27,7 @@ public class Interperter {
     }
 
     public void run() {
+        FSNode.logger.info("");
         while (this.nodeStatus.isRunning()) {
             try {
                 System.out.print(">> ");
@@ -43,6 +45,13 @@ public class Interperter {
                 this.nodeStatus.verifyUpdateList();
 
                 switch (args[0].toLowerCase()) {
+                    case "h":
+                    case "help":
+                        FSNode.logger.info("Available commands:");
+                        FSNode.logger.info("\tLIST - List available files to update.");
+                        FSNode.logger.info("\tGET <file_path> - Get file from peers.");
+                        FSNode.logger.info("\tQUIT - Exit program.");
+                        break;
                     case "l":
                     case "list":
                         if (peers.size() == 0)
@@ -141,7 +150,8 @@ public class Interperter {
             );
 
             try {
-                this.nodeStatus.loadFile(new File(this.nodeStatus.getDirPath() + "/" + newFile.getPath()));
+                FileInfo newFileInfo = this.nodeStatus.loadFile(new File(this.nodeStatus.getDirPath() + "/" + newFile.getPath()));
+                this.tcpHandler.registerFile(newFileInfo);
             } catch (IOException e) {
                 FSNode.logger.severe("Error reloading file " + newFile.getPath() + " to memory.");
                 e.printStackTrace();
@@ -164,14 +174,20 @@ public class Interperter {
         FSNode.logger.info("Download started for file " + updateFile.getPath() + " from " + peers.size() + " peers.");
         while (this.nodeStatus.getDownloading() != null) {
             try {
-                FSNode.logger.info("Download progress: " + this.nodeStatus.getDownloading().getProgress());
+                FilePool fileDownload = this.nodeStatus.getDownloading();
+                FSNode.logger.info("Already got " + fileDownload.getFileDownload().gottenSize() + " chunks.");
+                // FSNode.logger.info("Download progress: " + this.nodeStatus.getDownloading().getProgress());
                 Thread.sleep(1000);
             } catch (Exception e) {
                 FSNode.logger.warning("Error sleeping thread.");
             }
         }
 
+        long time = new Date().getTime() - filePool.getStartTime().getTime();
+        int timeSeconds = (int) Math.floor(time / 1000);
+
         FSNode.logger.info("File " + updateFile.getPath() + " finished downloading.");
+        FSNode.logger.info("Transfer took " + timeSeconds + " seconds (" + time + "ms).");
     }
 
     private void exit() {

@@ -60,7 +60,8 @@ public class UDPConnection {
     }
 
     public String getDevString() {
-        return this.socket.getLocalAddress().getHostAddress() + ":" + this.socket.getLocalPort();
+        return Constants.getNameByIp(this.socket.getLocalAddress().getHostAddress());
+        // return this.socket.getLocalAddress().getHostAddress() + ":" + this.socket.getLocalPort();
     }
 
     public int getPort() {

@@ -7,7 +7,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.util.Date;
 
 import fstp.models.sockets.UDPConnection;
 import fstp.utils.Tuple;
@@ -15,7 +14,6 @@ import fstp.utils.Tuple;
 public class TestServer {
     public static void main(String[] args) {
         try {
-            Date date = new Date();
             UDPConnection udpConnection = new UDPConnection(new DatagramSocket(4455));
             while (true) {
                 try {
@@ -28,7 +26,6 @@ public class TestServer {
 
                     int tag = in.readInt();
                     String l = in.readUTF();
-                    String boas = "Boas";
                     byte[] bytes = new byte[buffer.available()];
                     in.read(bytes);
 
