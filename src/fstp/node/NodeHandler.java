@@ -60,7 +60,7 @@ public class NodeHandler {
 
     public Runnable initUDPListener() {
         return () -> {
-            FSNode.logger.info("FS Transfer Protocol listening using UDP on " + udpHandler.getConnection().getDevString());
+            FSNode.logger.info("FS Transfer Protocol listening using UDP on port " + this.nodeStatus.getPort());
 
             while (this.nodeStatus.isRunning()) {
                 try {
