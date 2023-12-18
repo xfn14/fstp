@@ -57,7 +57,7 @@ public class TCPHandler {
         for (FileInfo fileInfo : fileInfos) {
             int res = this.registerFile(fileInfo);
             
-            if (res != 11) {
+            if (res != 12) {
                 finalRes = false;
                 FSNode.logger.warning("Error registering file " + fileInfo.getPath());
             } else FSNode.logger.info("File " + fileInfo.getPath() + " registered successfully.");

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import fstp.Constants;
@@ -19,12 +21,23 @@ public class FSNode {
 
     public static void main(String[] args) {
         LoggerHandler.loadLoggerSettings(logger, true);
+        Constants.initDns();
 
         // Check arguments
-        if (args.length < 2 || args.length > 3) {
+        if (args.length < 2) {
             logger.severe("Invalid number of arguments. Usage: java FSNode <folder_path> <tracker_ip> [tracker_port]");
             return;
         }
+
+        List<String> arguments = Arrays.asList(args);
+        if (arguments.contains("--debug")) {
+            Constants.DEDUG = true;
+            Constants.DEBUG_TRAFFIC = true;
+            Constants.DEBUG_UPDATE_LIST = true;
+        }
+
+        if (arguments.contains("--dns"))
+            Constants.DNS_SYSTEM = false;
 
         // Get arguments
         String path = args[0].charAt(args[0].length() - 1) == '/' ? args[0] : args[0] + "/";
@@ -54,7 +67,7 @@ public class FSNode {
 
 
         try {
-            Socket socket = new Socket(Constants.getDns().get(ip), Constants.DEFAULT_PORT);
+            Socket socket = new Socket(Constants.getDns(ip), Constants.DEFAULT_PORT);
             TCPConnection tcpConnection = new TCPConnection(socket);
             try {
                 UDPConnection udpConnection = new UDPConnection(port);

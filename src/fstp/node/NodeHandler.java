@@ -89,7 +89,7 @@ public class NodeHandler {
                             try {
                                 byte[] chunkData = this.nodeStatus.getChunkData(path, chunkPos);
                                 this.udpHandler.sendChunk(chunk, chunkData, addr.getX(), addr.getY());
-                                FSNode.logger.info("Sending chunk " + chunk + " to " + addr.getX() + ":" + addr.getY());
+                                FSNode.logger.info("Sending chunk " + chunk + " to " + Constants.getNameByIp(addr.getX())); //  + ":" + addr.getY()
                             } catch (Exception e) {
                                 this.udpHandler.invalidChunk(chunk, addr.getX(), addr.getY());
                                 FSNode.logger.warning("Error in local chunk in file system on " + path + " chunk " + chunk + ".");
@@ -112,8 +112,8 @@ public class NodeHandler {
 
                             List<Tuple<String, Integer>> resend = this.tcpHandler.ackChunk(this.nodeStatus.getDownloading().getPath(), chunkId);
                             for (Tuple<String, Integer> peer : resend)
-                                this.udpHandler.sendChunk(chunkId, chunkData, peer.getX().split(":")[0], peer.getY());
-                            FSNode.logger.info("Received chunk " + chunkId + " from " + addr.getX() + ":" + addr.getY());
+                                this.udpHandler.sendChunk(chunkId, chunkData, Constants.getDns(peer.getX().split(":")[0]), peer.getY());
+                            FSNode.logger.info("Received chunk " + chunkId + " from " + Constants.getNameByIp(addr.getX())); //  + ":" + addr.getY()
                             break;
                         default:
                             break;  
@@ -164,9 +164,9 @@ public class NodeHandler {
                     }
 
                     try {
-                        this.udpHandler.requestChunk(filePool.getPath(), chunkToRequest, Constants.getDns().get(addr[0]), peer.getY());
+                        this.udpHandler.requestChunk(filePool.getPath(), chunkToRequest, Constants.getDns(addr[0]), peer.getY());
                         filePool.addRequest(peer, chunkToRequest);
-                        FSNode.logger.info("Requesting chunk " + chunkToRequest + " from " + Constants.getDns().get(addr[0]) + ":" + peer.getY());
+                        FSNode.logger.info("Requesting chunk " + chunkToRequest + " from " + addr[0]); // + ":" + peer.getY()
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

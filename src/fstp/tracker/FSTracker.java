@@ -3,6 +3,8 @@ package fstp.tracker;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import fstp.Constants;
@@ -21,6 +23,17 @@ public class FSTracker {
 
     public static void main(String[] args) {
         LoggerHandler.loadLoggerSettings(logger, true);
+        Constants.initDns();
+
+        List<String> arguments = Arrays.asList(args);
+        if (arguments.contains("--debug")) {
+            Constants.DEDUG = true;
+            Constants.DEBUG_TRAFFIC = true;
+            Constants.DEBUG_UPDATE_LIST = true;
+        }
+        
+        if (arguments.contains("--dns"))
+            Constants.DNS_SYSTEM = false;
 
         FSTracker fsTracker = new FSTracker();
         try {

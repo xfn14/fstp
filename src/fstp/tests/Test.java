@@ -11,6 +11,21 @@ import fstp.utils.FileUtils;
 
 public class Test {
     public static void main(String[] args) throws IOException {
+        Constants.DNS_SYSTEM = true;
+        Constants.initDns();
+        String ip = Constants.getDns("PC1");
+        System.out.println(ip);
+        System.out.println(Constants.getNameByIp(ip));
+        
+        Constants.DNS_SYSTEM = false;
+        ip = Constants.getDns("PC1");
+        System.out.println(ip);
+        System.out.println(Constants.getNameByIp(ip));
+
+        ip = Constants.getDns("10.1.1.1");
+        System.out.println(ip);
+        System.out.println(Constants.getNameByIp(ip));
+
         File dir = new File("/home/fn14/workspace/lei/fstp/shared/");
         System.out.println(dir.getPath());
         NodeStatus nodeStatus = new NodeStatus(dir, Constants.DEFAULT_PORT);

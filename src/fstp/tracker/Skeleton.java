@@ -58,7 +58,7 @@ public class Skeleton {
 
                 if (nblocks == 0) {
                     trackerStatus.addFile(c.getDevString(), fileInfo);
-                    c.send((byte) 11, bufferOut);
+                    c.send((byte) 12, bufferOut);
                     break;
                 }
 
@@ -85,7 +85,7 @@ public class Skeleton {
                     FSTracker.logger.info("File has been updated, removing download progress for " + c.getDevString());
                 }
                 
-                c.send((byte) (!blocks.contains(-1L) ? 11 : 40), bufferOut);
+                c.send((byte) (!blocks.contains(-1L) ? 12 : 40), bufferOut);
                 break;
             case 2:
                 Map<FileInfo, List<String>> toUpdate = trackerStatus.getUpdateList(c.getDevString());
